@@ -13,6 +13,8 @@ var jump_timer:Timer = Timer.new()
 
 var jump_on_cooldown = false
 
+var grappling_line_force: float = 100000.0
+
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
     add_child(jump_timer)
@@ -47,9 +49,15 @@ func _physics_process(delta: float) -> void:
 
     var lines = line_holder.get_children()
 
-    if wish_dir.length() > 0.1:
+    if wish_dir.length() > 0.05:
         for line: GrappleLine in lines:
-            line.get_angle_vector()
+            var line_dir := line.get_angle_vector()
+
+            var facing = line_dir.normalized().dot(wish_dir.normalized())
+            
+            if facing > 0:
+                apply_central_force(line_dir * facing * wish_dir.length() * grappling_line_force * delta)
+        
         
 
 func grounded() -> bool:
