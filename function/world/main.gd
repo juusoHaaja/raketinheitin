@@ -8,7 +8,12 @@ var circle_tool: CircleTool
 @onready var chunk_parent: ChunkParent = $ChunkParent
 
 func _ready():
-    circle_tool = CircleTool.new(6.0)
+    if DestructionManager.instance == null:
+        var dm = DestructionManager.new()
+        dm.name = "DestructionManager"
+        add_child(dm)
+    
+        circle_tool = CircleTool.new(6.0)
 
 func _unhandled_input(event: InputEvent):
     if event is InputEventMouseButton and event.pressed:

@@ -14,7 +14,7 @@ func initialize(start_pos: Vector2, direction: Vector2, p_circle_tool: TileTool)
     global_position = start_pos
     velocity = direction.normalized() * speed
     circle_tool = p_circle_tool
-    connect("body_entered", body_enter)
+    body_entered.connect(_on_body_entered)
 
 func _physics_process(delta: float):
     position += velocity * delta
@@ -22,12 +22,47 @@ func _physics_process(delta: float):
     time_alive += delta
     if time_alive >= lifetime:
         queue_free()
-        return "disable_mode"
 
 func explode():
     circle_tool.radius = explosion_radius
+    
+    # Get destroyed tiles before applying
+    var center := ChunkParent.instance.snap_global_to_grid(global_position)
+    var destroyed := _collect_tiles_in_radius(center)
+    
+    # Apply destruction to tilemap
     circle_tool.apply_global(global_position)
+    
+    # Spawn all effects via DestructionManager
+    if DestructionManager.instance != null:
+        var tile_size: float = ChunkParent.instance.chunks[0].tile_set.tile_size.x
+        DestructionManager.instance.create_explosion(
+            global_position,
+            destroyed,
+            explosion_radius * tile_size
+        )
+    
     queue_free()
 
-func body_enter(_body: Node2D):
+func _collect_tiles_in_radius(center: Vector2i) -> Array[Dictionary]:
+    var tiles: Array[Dictionary] = []
+    var radius_int := int(ceil(explosion_radius))
+    var radius_sq := explosion_radius * explosion_radius
+    
+    for y in range(center.y - radius_int, center.y + radius_int + 1):
+        for x in range(center.x - radius_int, center.x + radius_int + 1):
+            var pos := Vector2i(x, y)
+            var dist_sq := Vector2(center).distance_squared_to(Vector2(pos))
+            
+            if dist_sq <= radius_sq:
+                var tile := ChunkParent.instance.api_get_tile_pos(pos)
+                if tile != 0:
+                    tiles.append({
+                        "position": pos,
+                        "material": tile
+                    })
+    
+    return tiles
+
+func _on_body_entered(_body: Node2D):
     explode()

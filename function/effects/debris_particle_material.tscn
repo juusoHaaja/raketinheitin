@@ -1,0 +1,7 @@
+[gd_scene format=3 uid="uid://j4dyf70m4cdn"]
+
+[ext_resource type="Texture2D" uid="uid://6ii76g611t6d" path="res://icon.svg" id="1_p8n6h"]
+
+[node name="DebrisParticleMaterial" type="GPUParticles2D" unique_id=590740683]
+sub_emitter = NodePath(".")
+texture = ExtResource("1_p8n6h")
