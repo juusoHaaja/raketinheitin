@@ -7,9 +7,21 @@
 script = ExtResource("1_7hxqw")
 
 [node name="Line2D" type="Line2D" parent="." unique_id=774940943]
+texture_filter = 1
 texture_repeat = 2
 points = PackedVector2Array(0, 0, 100, 0)
 texture = ExtResource("2_sgsg2")
 texture_mode = 1
 
 [node name="RayCast2D" type="RayCast2D" parent="." unique_id=90879338]
+
+[node name="HookHolder" type="Node" parent="." unique_id=1502624625]
+
+[node name="Hook" type="Node2D" parent="HookHolder" unique_id=11363099]
+
+[node name="Sprite2D" type="Sprite2D" parent="HookHolder/Hook" unique_id=1120124159]
+texture_filter = 1
+scale = Vector2(0.2, 0.2)
+texture = ExtResource("2_sgsg2")
+
+[node name="RayCast2D" type="RayCast2D" parent="HookHolder/Hook" unique_id=648772523]
