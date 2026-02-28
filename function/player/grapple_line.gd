@@ -51,16 +51,12 @@ func update():
 
     update_line()
 
+    if check_if_empty_terrain(anchor):
+        reel_in()
+
 
 func update_anchor(global_pos: Vector2):
     anchor = global_pos
-
-
-func _unhandled_input(event: InputEvent):
-    if event is InputEventMouseButton and event.pressed:
-        if event.button_index == MOUSE_BUTTON_MIDDLE:
-            var direction = (get_global_mouse_position() - player.global_position).normalized()
-            shoot(player.global_position, direction)
 
 
 func get_angle_vector() -> Vector2:
@@ -129,3 +125,17 @@ func reel_in():
 
 func update_line():
     line2d.set_point_position(1, to_local(anchor))
+
+
+func check_if_empty_terrain(pos: Vector2) -> bool:
+    var chunk_parent := ChunkParent.instance
+
+    var cooler_pos = pos - Vector2(2.0, 2.0)
+
+    for i in 3:
+        for j in 3:
+            var even_cooler_pos = cooler_pos + Vector2(i, j)
+            if chunk_parent.api_get_tile_pos(chunk_parent.snap_global_to_grid(even_cooler_pos)) != 0:
+                return false
+
+    return true

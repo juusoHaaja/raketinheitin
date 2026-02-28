@@ -1,7 +1,6 @@
 [gd_scene format=3 uid="uid://cdagrd1fdco81"]
 
 [ext_resource type="Script" uid="uid://cor860stbs6x1" path="res://function/player/player.gd" id="1_p57aj"]
-[ext_resource type="PackedScene" uid="uid://d2k2ir7yhnfr2" path="res://function/player/grapple_line.tscn" id="3_c0i3b"]
 [ext_resource type="Texture2D" uid="uid://bhdkrfmh54jox" path="res://art/player/mina.png" id="3_jgmqg"]
 [ext_resource type="PackedScene" uid="uid://dr015heujwhl" path="res://function/world/resources/inventory.tscn" id="4_jgmqg"]
 [ext_resource type="PackedScene" uid="uid://b2yijowbrjpyp" path="res://function/audio/sfx/sound_effect.tscn" id="5_qdvee"]
@@ -31,8 +30,6 @@ max_contacts_reported = 5
 script = ExtResource("1_p57aj")
 
 [node name="Lines" type="Node" parent="." unique_id=1167023238]
-
-[node name="GrappleLine" parent="Lines" unique_id=865385783 instance=ExtResource("3_c0i3b")]
 
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=563901597]
 z_index = 1
