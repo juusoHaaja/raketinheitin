@@ -14,6 +14,7 @@ var jump_timer:Timer = Timer.new()
 var jump_on_cooldown = false
 
 var grappling_line_force: float = 100000.0
+var max_hooks: int = 4
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:

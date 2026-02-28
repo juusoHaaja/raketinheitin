@@ -85,6 +85,7 @@ func shoot(pos: Vector2, dir: Vector2):
 
     hook.position = pos
     hook_raycast.target_position = dir
+    hook.look_at(to_global(shot_dir))
 
 
 func shoot_update(delta: float):
@@ -98,9 +99,11 @@ func shoot_update(delta: float):
         var collision_point = hook_raycast.get_collision_point()
         anchor = collision_point
 
-        hook.visible = false
+        #hook.visible = false
 
         state = LineState.ATTACHED
+        hook.position = collision_point
+        return
 
     hook.position += shot_dir * hook_velocity * delta
 
