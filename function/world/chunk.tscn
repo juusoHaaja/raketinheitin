@@ -1,0 +1,30 @@
+[gd_scene format=3 uid="uid://g60xynbq8rl0"]
+
+[ext_resource type="Script" uid="uid://dlgj5cv64faho" path="res://function/world/chunk.gd" id="1_6hfvd"]
+[ext_resource type="Texture2D" uid="uid://pl6sb6yydcdo" path="res://art/spritesheets/terrain.png" id="1_duv6g"]
+
+[sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_pixdd"]
+texture = ExtResource("1_duv6g")
+0:0/0 = 0
+1:0/0 = 0
+2:0/0 = 0
+3:0/0 = 0
+0:1/0 = 0
+1:1/0 = 0
+2:1/0 = 0
+3:1/0 = 0
+0:2/0 = 0
+1:2/0 = 0
+2:2/0 = 0
+3:2/0 = 0
+0:3/0 = 0
+1:3/0 = 0
+2:3/0 = 0
+3:3/0 = 0
+
+[sub_resource type="TileSet" id="TileSet_5ie0t"]
+sources/0 = SubResource("TileSetAtlasSource_pixdd")
+
+[node name="Chunk" type="TileMapLayer" unique_id=497056709]
+tile_set = SubResource("TileSet_5ie0t")
+script = ExtResource("1_6hfvd")

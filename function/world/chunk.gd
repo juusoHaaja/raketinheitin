@@ -1,6 +1,6 @@
 # world/grid.gd
 extends TileMapLayer
-class_name Grid
+class_name Chunk
 
 #chunk
 

@@ -1,7 +1,7 @@
 # world/tile_tool.gd
 class_name TileTool
 
-var grid: Grid
+var grid: Chunk
 var selected_tile: int = 1
 
 func apply_global(pos: Vector2):

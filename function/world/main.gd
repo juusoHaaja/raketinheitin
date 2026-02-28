@@ -5,11 +5,11 @@ extends Node2D
 
 var circle_tool: CircleTool
 
-@onready var grid: Grid = $Grid
+@onready var chunk_parent: ChunkParent = $ChunkParent
 
 func _ready():
     circle_tool = CircleTool.new()
-    circle_tool.grid = grid
+    circle_tool.grid = chunk_parent.chunks[0]
 
 func _unhandled_input(event: InputEvent):
     if event is InputEventMouseButton and event.pressed:

@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://mbw4ot8ba0xc"]
 
 [ext_resource type="Script" uid="uid://bjxh1ohinage2" path="res://function/world/chunk_parent.gd" id="1_fud3w"]
-[ext_resource type="PackedScene" uid="uid://cqsygijl13nuw" path="res://function/world/grid.tscn" id="2_5seu7"]
+[ext_resource type="PackedScene" uid="uid://g60xynbq8rl0" path="res://function/world/chunk.tscn" id="2_5seu7"]
 
 [node name="ChunkParent" type="Node2D" unique_id=1388262308]
 script = ExtResource("1_fud3w")

@@ -1,4 +1,5 @@
 extends Node2D
+class_name ChunkParent
 
 @export var chunk_scene: PackedScene
 var chunks = Array()
@@ -9,13 +10,13 @@ func generate_chunk(pos: Vector2i):
     force_generate(pos)
 
 func is_generated(pos: Vector2i)-> bool:
-    for c:Grid in chunks:
+    for c:Chunk in chunks:
         if c.chunk_pos == pos:
             return true
     return false
 
 func force_generate(pos:Vector2i):
-    var c = chunk_scene.instantiate() as Grid
+    var c = chunk_scene.instantiate() as Chunk
     chunks.push_back(c)
     add_child(c);
     c.gen_init(pos)
