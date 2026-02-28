@@ -1,8 +1,9 @@
+# world/grid.gd
 extends TileMapLayer
 class_name Grid
 
-@export var tileset_width = 4
-@export var tileset_height = 4
+@export var tileset_width = 16
+@export var tileset_height = 16
 var tileset_count = tileset_width*tileset_height
 
 @export var map_width = 100

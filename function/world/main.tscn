@@ -2,8 +2,18 @@
 
 [ext_resource type="Script" uid="uid://dpu54gc2ogeus" path="res://function/world/main.gd" id="1_6s3bf"]
 [ext_resource type="PackedScene" uid="uid://cqsygijl13nuw" path="res://function/world/grid.tscn" id="2_7nlgr"]
+[ext_resource type="PackedScene" uid="uid://qxeheckf7g0j" path="res://function/world/projectiles/projectile.tscn" id="2_8sgfh"]
+[ext_resource type="Texture2D" uid="uid://6ii76g611t6d" path="res://icon.svg" id="4_6qdvf"]
 
 [node name="Main" type="Node2D" unique_id=184280079]
 script = ExtResource("1_6s3bf")
+projectile_scene = ExtResource("2_8sgfh")
 
 [node name="Grid" parent="." unique_id=790140437 instance=ExtResource("2_7nlgr")]
+
+[node name="CanvasModulate" type="CanvasModulate" parent="." unique_id=1394150720]
+color = Color(0, 0, 0, 1)
+
+[node name="PointLight2D" type="PointLight2D" parent="." unique_id=1186394687]
+energy = 10.72
+texture = ExtResource("4_6qdvf")
