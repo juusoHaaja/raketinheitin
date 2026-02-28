@@ -7,12 +7,24 @@ class_name Player
 @onready var collider = $CollisionShape2D
 
 var local_collisions: PackedVector2Array
+var jump_timer:Timer = Timer.new()
 
+var jump_on_cooldown = false
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
-    pass # Replace with function body.
+    add_child(jump_timer)
+    jump_timer.one_shot = true
+    jump_timer.connect("timeout", jump_timer_timeout)
 
+func jump():
+    if !jump_on_cooldown:
+        apply_central_force(Vector2.UP * 30000)
+        jump_on_cooldown = true
+        jump_timer.start(0.4)
+
+func jump_timer_timeout():
+    jump_on_cooldown = false
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
@@ -26,7 +38,7 @@ func _physics_process(delta: float) -> void:
             apply_central_force(Vector2(wish_dir.x, 0) * 100000 * delta)
 
         if wish_dir.y < 0.0:
-            apply_central_force(Vector2.UP * 10000)
+            jump()
     else:
         if linear_velocity.x * wish_dir.x < 500.0:
             apply_central_force(Vector2(wish_dir.x, 0) * 10000 * delta)
