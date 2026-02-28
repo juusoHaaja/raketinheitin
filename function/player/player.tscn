@@ -1,16 +1,18 @@
 [gd_scene format=3 uid="uid://cdagrd1fdco81"]
 
 [ext_resource type="Script" uid="uid://cor860stbs6x1" path="res://function/player/player.gd" id="1_p57aj"]
-[ext_resource type="Texture2D" uid="uid://6ii76g611t6d" path="res://icon.svg" id="1_w0krb"]
 [ext_resource type="PackedScene" uid="uid://d2k2ir7yhnfr2" path="res://function/player/grapple_line.tscn" id="3_c0i3b"]
+[ext_resource type="Texture2D" uid="uid://bhdkrfmh54jox" path="res://art/player/mina.png" id="3_jgmqg"]
 
-[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_p57aj"]
-radius = 23.0
-height = 102.0
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_c0i3b"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_c0i3b"]
+size = Vector2(40, 65)
 
 [node name="Player" type="RigidBody2D" unique_id=58689154]
 collision_layer = 2
 collision_mask = 3
+physics_material_override = SubResource("PhysicsMaterial_c0i3b")
 lock_rotation = true
 contact_monitor = true
 max_contacts_reported = 5
@@ -20,19 +22,21 @@ script = ExtResource("1_p57aj")
 
 [node name="GrappleLine" parent="Lines" unique_id=865385783 instance=ExtResource("3_c0i3b")]
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1670625849]
-shape = SubResource("CapsuleShape2D_p57aj")
-
 [node name="Sprite2D" type="Sprite2D" parent="." unique_id=563901597]
 z_index = 1
 texture_filter = 1
 texture_repeat = 2
-scale = Vector2(0.3671875, 0.796875)
-texture = ExtResource("1_w0krb")
+scale = Vector2(8, 8)
+texture = ExtResource("3_jgmqg")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1670625849]
+position = Vector2(-1, 0.5)
+shape = SubResource("RectangleShape2D_c0i3b")
 
 [node name="MeshInstance2D" type="MeshInstance2D" parent="." unique_id=1736626821]
 
 [node name="GroundRaycast" type="RayCast2D" parent="." unique_id=177555711]
-target_position = Vector2(0, 51)
+target_position = Vector2(0, 5)
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=1767148033]
+zoom = Vector2(2, 2)

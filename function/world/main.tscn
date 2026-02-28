@@ -4,12 +4,16 @@
 [ext_resource type="PackedScene" uid="uid://mbw4ot8ba0xc" path="res://function/world/chunk_parent.tscn" id="2_7nlgr"]
 [ext_resource type="PackedScene" uid="uid://qxeheckf7g0j" path="res://function/world/projectiles/projectile.tscn" id="2_8sgfh"]
 [ext_resource type="PackedScene" uid="uid://cdagrd1fdco81" path="res://function/player/player.tscn" id="3_6qdvf"]
+[ext_resource type="PackedScene" uid="uid://bodvfx5et6e3x" path="res://function/world/resources/gem.tscn" id="5_sg8pp"]
 
 [node name="Main" type="Node2D" unique_id=184280079]
 script = ExtResource("1_6s3bf")
 projectile_scene = ExtResource("2_8sgfh")
 
 [node name="Player" parent="." unique_id=58689154 instance=ExtResource("3_6qdvf")]
-position = Vector2(511, -122)
+position = Vector2(586, 296)
 
 [node name="ChunkParent" parent="." unique_id=1388262308 instance=ExtResource("2_7nlgr")]
+
+[node name="Gem" parent="." unique_id=4840960 instance=ExtResource("5_sg8pp")]
+position = Vector2(407, 275)
