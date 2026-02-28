@@ -8,8 +8,7 @@ var circle_tool: CircleTool
 @onready var chunk_parent: ChunkParent = $ChunkParent
 
 func _ready():
-    circle_tool = CircleTool.new()
-    circle_tool.grid = chunk_parent.chunks[0]
+    circle_tool = CircleTool.new(3.0)
 
 func _unhandled_input(event: InputEvent):
     if event is InputEventMouseButton and event.pressed:
@@ -18,10 +17,10 @@ func _unhandled_input(event: InputEvent):
         
         # Scroll to change explosion size
         if event.button_index == MOUSE_BUTTON_WHEEL_UP:
-            circle_tool.radius = min(circle_tool.radius + 0.5, 10.0)
+            circle_tool.set_radius(circle_tool.radius + 0.5)
             print("Explosion radius: ", circle_tool.radius)
         elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
-            circle_tool.radius = max(circle_tool.radius - 0.5, 1.0)
+            circle_tool.set_radius(circle_tool.radius - 0.5)
             print("Explosion radius: ", circle_tool.radius)
 
 func shoot_rocket():
