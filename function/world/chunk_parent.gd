@@ -71,13 +71,14 @@ func api_set_tile_pos(tile_pos:Vector2i, val:int):
     current_chunk.api_set_tile_pos(tile_pos, val)
 
 func snap_global_to_grid(pos: Vector2) -> Vector2i:
-    pos = pos / chunks[0].tile_set.tile_size.x
+    pos = floor(pos / chunks[0].tile_set.tile_size.x)
     return pos as Vector2i
 
 func get_chunk_pos(pos: Vector2i) -> Vector2i:
     return floor(pos as Vector2 / chunks[0].map_width)
 
 func pos_modulo_chunk(pos: Vector2i) -> Vector2i:
-    return pos % chunks[0].map_width
+    var width = chunks[0].map_width
+    return Vector2i(posmod(pos.x, width), posmod(pos.y, width))
 
 #\API
