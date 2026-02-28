@@ -1,29 +1,36 @@
 [gd_scene format=3 uid="uid://qxeheckf7g0j"]
 
 [ext_resource type="Script" uid="uid://g08ntj675j4f" path="res://function/world/projectiles/projectile.gd" id="1_lonfr"]
-[ext_resource type="Texture2D" uid="uid://bp16g8v43xn1f" path="res://art/projectiles/rocket.png" id="2_lonfr"]
+[ext_resource type="Texture2D" uid="uid://5m4pnddbv8bv" path="res://art/projectiles/fireball.png" id="2_lonfr"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_lonfr"]
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_nwwg0"]
+[sub_resource type="AtlasTexture" id="AtlasTexture_lonfr"]
 atlas = ExtResource("2_lonfr")
 region = Rect2(0, 0, 16, 16)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_5xx18"]
+[sub_resource type="AtlasTexture" id="AtlasTexture_nwwg0"]
 atlas = ExtResource("2_lonfr")
 region = Rect2(16, 0, 16, 16)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_h6voe"]
+[sub_resource type="AtlasTexture" id="AtlasTexture_5xx18"]
 atlas = ExtResource("2_lonfr")
 region = Rect2(32, 0, 16, 16)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_tqh5s"]
+[sub_resource type="AtlasTexture" id="AtlasTexture_h6voe"]
 atlas = ExtResource("2_lonfr")
 region = Rect2(48, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_tqh5s"]
+atlas = ExtResource("2_lonfr")
+region = Rect2(64, 0, 16, 16)
 
 [sub_resource type="SpriteFrames" id="SpriteFrames_u33cf"]
 animations = [{
 "frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_lonfr")
+}, {
 "duration": 1.0,
 "texture": SubResource("AtlasTexture_nwwg0")
 }, {
@@ -38,7 +45,7 @@ animations = [{
 }],
 "loop": true,
 "name": &"default",
-"speed": 32.0
+"speed": 16.0
 }]
 
 [node name="Projectile" type="Area2D" unique_id=1683257601]
@@ -53,4 +60,4 @@ position = Vector2(-1.4901161e-08, -1.4901161e-08)
 scale = Vector2(4, 4)
 sprite_frames = SubResource("SpriteFrames_u33cf")
 autoplay = "default"
-frame_progress = 0.8695855
+frame_progress = 0.495093

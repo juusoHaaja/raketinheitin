@@ -4,7 +4,7 @@ class_name Projectile
 
 signal exploded
 
-@export var speed: float = 1000.0
+@export var speed: float = 700.0
 @export var explosion_radius: float = 4.0
 @export var lifetime: float = 5.0
 
