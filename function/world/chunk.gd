@@ -2,13 +2,14 @@
 extends TileMapLayer
 class_name Chunk
 
-# chunk
-static var chunk_size = 100 # size in tiles
-var chunk_pos = Vector2i(0,0)
+# Chunk properties
+static var chunk_size = 100
+var chunk_pos = Vector2i(0, 0)
+var chunk_parent: ChunkParent
 
 @export var tileset_width = 8
 @export var tileset_height = 8
-var tileset_count = tileset_width*tileset_height
+var tileset_count = tileset_width * tileset_height
 
 @export var map_width = 100
 @export var map_height = 100
@@ -22,7 +23,9 @@ var cells = PackedByteArray()
 @export var smoothing_iterations := 12
 @export_range(0, 999999) var world_seed := 1
 
-var _temp_map := {}  # Temporary dictionary for cave generation
+var generation_complete := false
+
+var _temp_map := {}
 
 func clear_cells():
     cells.clear()
@@ -37,6 +40,12 @@ func pos_to_cell_index(pos: Vector2i) -> int:
 
 func cell_index_to_pos(index: int) -> Vector2i:
     return Vector2i(index % map_width, index / map_width)
+
+func local_to_world_pos(local_pos: Vector2i) -> Vector2i:
+    return local_pos + chunk_pos * map_width
+
+func world_to_local_pos(world_pos: Vector2i) -> Vector2i:
+    return world_pos - chunk_pos * map_width
 
 func api_get_tile_pos(pos: Vector2i) -> int:
     return api_get_tile(pos_to_cell_index(pos))
@@ -55,12 +64,6 @@ func api_set_tile(index: int, val: int):
 func global_to_grid(pos: Vector2) -> Vector2i:
     pos = pos / tile_set.tile_size.x
     return pos as Vector2i
-
-func cell_byte_to_tilemap(b: int) -> int:
-    if b == 0:
-        return 0
-    else:
-        return 1
 
 func tilemap_index_to_source_coord(i: int) -> Vector2i:
     return Vector2i(i % tileset_width, i / tileset_width)
@@ -87,8 +90,7 @@ func _ready() -> void:
 func _process(delta: float) -> void:
     pass
 
-# Chunk generation functions
-
+# Chunk generation
 func gen_init(pos: Vector2i):
     chunk_pos = pos
     global_position = pos * chunk_size * tile_pixel_size
@@ -96,68 +98,116 @@ func gen_init(pos: Vector2i):
     generate()
 
 func generate():
+    generation_complete = false
     _initialize_cave_map()
     
     for i in smoothing_iterations:
         _smooth_map()
     
     _apply_cave_to_cells()
+    generation_complete = true
 
-# Cave Generation - Initialization
-
-func _get_chunk_seed() -> int:
-    # Create unique seed based on chunk position and world seed
-    # Using large prime numbers for better distribution
-    return world_seed + chunk_pos.x * 73856093 + chunk_pos.y * 19349663
-
+# Cave Generation Init
 func _initialize_cave_map() -> void:
-    seed(_get_chunk_seed())
     _temp_map.clear()
     
     for x in range(map_width):
         for y in range(map_height):
-            var pos := Vector2i(x, y)
-            # Edges are always walls for cleaner chunk boundaries
-            if x == 0 or x == map_width - 1 or y == 0 or y == map_height - 1:
-                _temp_map[pos] = true
+            var local_pos := Vector2i(x, y)
+            var world_pos := local_to_world_pos(local_pos)
+            
+            # Use noise for cave structure
+            var cave_val = chunk_parent.get_cave_value_at_world_pos(world_pos)
+            
+            # Convert fill_percent to threshold
+            var threshold = (fill_percent - 50.0) / 50.0 * 0.5
+            
+            if cave_val > threshold:
+                # Solid - get material from noise
+                _temp_map[local_pos] = chunk_parent.get_material_at_world_pos(world_pos)
             else:
-                _temp_map[pos] = randf() * 100 < fill_percent
+                _temp_map[local_pos] = 0  # Empty
 
-# Cave Generation - Cellular Automata Smoothing
-
+# Cellular Automata Smoothing
 func _smooth_map() -> void:
     var new_map := {}
     
     for x in range(map_width):
         for y in range(map_height):
-            var pos := Vector2i(x, y)
-            var wall_count := _get_surrounding_wall_count(pos)
+            var local_pos := Vector2i(x, y)
+            var wall_count := _get_surrounding_wall_count(local_pos)
+            var current_val: int = _temp_map.get(local_pos, 1)
             
-            # Cellular automata rules
             if wall_count > 4:
-                new_map[pos] = true
+                if current_val == 0:
+                    new_map[local_pos] = _get_dominant_neighbor_material(local_pos)
+                else:
+                    new_map[local_pos] = current_val
             elif wall_count < 4:
-                new_map[pos] = false
+                new_map[local_pos] = 0
             else:
-                new_map[pos] = _temp_map[pos]
+                new_map[local_pos] = current_val
     
     _temp_map = new_map
 
-func _get_surrounding_wall_count(pos: Vector2i) -> int:
+func _get_surrounding_wall_count(local_pos: Vector2i) -> int:
     var wall_count := 0
     
-    for x in range(-1, 2):
-        for y in range(-1, 2):
-            var check_pos := Vector2i(pos.x + x, pos.y + y)
-            if check_pos != pos:
-                # Default to wall if outside bounds
-                if _temp_map.get(check_pos, true):
+    for dx in range(-1, 2):
+        for dy in range(-1, 2):
+            if dx == 0 and dy == 0:
+                continue
+                
+            var check_local := Vector2i(local_pos.x + dx, local_pos.y + dy)
+            
+            # Check if within this chunk
+            if check_local.x >= 0 and check_local.x < map_width and \
+               check_local.y >= 0 and check_local.y < map_height:
+                # Use local temp map
+                var val: int = _temp_map.get(check_local, 1)
+                if val != 0:
+                    wall_count += 1
+            else:
+                # Cross-chunk lookup using world position
+                var world_pos := local_to_world_pos(check_local)
+                if chunk_parent.is_solid_at_world_pos(world_pos):
                     wall_count += 1
     
     return wall_count
 
-# Cave Generation - Room Creation
+func _get_dominant_neighbor_material(local_pos: Vector2i) -> int:
+    var counts := {}
+    
+    for dx in range(-1, 2):
+        for dy in range(-1, 2):
+            if dx == 0 and dy == 0:
+                continue
+                
+            var check_local := Vector2i(local_pos.x + dx, local_pos.y + dy)
+            var val := 0
+            
+            if check_local.x >= 0 and check_local.x < map_width and \
+               check_local.y >= 0 and check_local.y < map_height:
+                val = _temp_map.get(check_local, 1)
+            else:
+                # For cross-chunk, get material from noise
+                var world_pos := local_to_world_pos(check_local)
+                if chunk_parent.is_solid_at_world_pos(world_pos):
+                    val = chunk_parent.get_material_at_world_pos(world_pos)
+            
+            if val != 0:
+                counts[val] = counts.get(val, 0) + 1
+    
+    var best_mat := 1
+    var best_count := 0
+    for mat in counts:
+        if counts[mat] > best_count:
+            best_count = counts[mat]
+            best_mat = mat
+    
+    return best_mat
 
+# Room Creation
 func create_room(center: Vector2i, radius: int) -> void:
     for x in range(-radius, radius + 1):
         for y in range(-radius, radius + 1):
@@ -170,28 +220,11 @@ func create_room(center: Vector2i, radius: int) -> void:
                     cells[index] = 0
                     set_tileset_tile(local_pos, 0)
 
-# Cave Generation - Apply to Cell Array
-
 func _apply_cave_to_cells() -> void:
     for i in range(cells.size()):
         var pos = cell_index_to_pos(i)
-        if _temp_map.get(pos, true):
-            cells[i] = 1  # Wall tile
-        else:
-            cells[i] = 0  # Empty
+        var val: int = _temp_map.get(pos, 1)
+        cells[i] = val
     
     update_cells()
-    _temp_map.clear()  # Free memory
-
-# Cave Generation - Force Walls at Edges
-
-func force_edge_walls() -> void:
-    # Top and bottom edges
-    for x in range(map_width):
-        api_set_tile_pos(Vector2i(x, 0), 1)
-        api_set_tile_pos(Vector2i(x, map_height - 1), 1)
-    
-    # Left and right edges
-    for y in range(map_height):
-        api_set_tile_pos(Vector2i(0, y), 1)
-        api_set_tile_pos(Vector2i(map_width - 1, y), 1)
+    _temp_map.clear()
