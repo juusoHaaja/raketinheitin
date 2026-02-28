@@ -16,4 +16,4 @@ position = Vector2(586, 296)
 [node name="ChunkParent" parent="." unique_id=1388262308 instance=ExtResource("2_7nlgr")]
 
 [node name="Gem" parent="." unique_id=4840960 instance=ExtResource("5_sg8pp")]
-position = Vector2(407, 275)
+position = Vector2(348, 24)

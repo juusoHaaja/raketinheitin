@@ -2,5 +2,14 @@
 
 [ext_resource type="Script" uid="uid://hq5yvkqkji7g" path="res://function/world/resources/inventory.gd" id="1_jhqcu"]
 
+[sub_resource type="CircleShape2D" id="CircleShape2D_jhqcu"]
+radius = 97.020615
+
 [node name="Inventory" type="Node2D" unique_id=1315811495]
 script = ExtResource("1_jhqcu")
+
+[node name="Area2D" type="Area2D" parent="." unique_id=720077420]
+collision_mask = 8
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D" unique_id=2061875494]
+shape = SubResource("CircleShape2D_jhqcu")
