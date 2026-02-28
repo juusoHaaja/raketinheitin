@@ -1,0 +1,16 @@
+[gd_scene format=3 uid="uid://brj65ojy3hlht"]
+
+[ext_resource type="Script" uid="uid://gk32ors0iss0" path="res://function/world/lighting/fog_of_war.gd" id="1_a2joo"]
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_a2joo"]
+blend_mode = 3
+
+[sub_resource type="Gradient" id="Gradient_a2joo"]
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_3wf1y"]
+gradient = SubResource("Gradient_a2joo")
+
+[node name="FogOfWar" type="Sprite2D" unique_id=1155364450]
+material = SubResource("CanvasItemMaterial_a2joo")
+texture = SubResource("GradientTexture2D_3wf1y")
+script = ExtResource("1_a2joo")
