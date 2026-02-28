@@ -23,9 +23,10 @@ texture_mode = 1
 
 [node name="Sprite2D" type="Sprite2D" parent="HookHolder/Hook" unique_id=1120124159]
 texture_filter = 1
-position = Vector2(-16, 1)
+position = Vector2(12, 0)
 rotation = -1.5707964
 scale = Vector2(2, 2)
 texture = ExtResource("3_8qgqi")
+flip_v = true
 
 [node name="RayCast2D" type="RayCast2D" parent="HookHolder/Hook" unique_id=648772523]
