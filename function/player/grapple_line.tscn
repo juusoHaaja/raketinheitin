@@ -1,0 +1,15 @@
+[gd_scene format=3 uid="uid://d2k2ir7yhnfr2"]
+
+[ext_resource type="Script" uid="uid://dx6xi8exx3s5h" path="res://function/player/grapple_line.gd" id="1_7hxqw"]
+[ext_resource type="Texture2D" uid="uid://6ii76g611t6d" path="res://icon.svg" id="2_sgsg2"]
+
+[node name="GrappleLine" type="Node2D" unique_id=865385783]
+script = ExtResource("1_7hxqw")
+
+[node name="Line2D" type="Line2D" parent="." unique_id=774940943]
+texture_repeat = 2
+points = PackedVector2Array(0, 0, 100, 0)
+texture = ExtResource("2_sgsg2")
+texture_mode = 1
+
+[node name="RayCast2D" type="RayCast2D" parent="." unique_id=90879338]
