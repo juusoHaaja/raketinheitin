@@ -37,6 +37,9 @@ func _unhandled_input(event: InputEvent):
             circle_tool.set_radius(circle_tool.radius - 0.5)
             print("Explosion radius: ", circle_tool.radius)
 
+        if event.button_index == MOUSE_BUTTON_MIDDLE:
+            shoot_grappling_hook()
+
 func shoot_rocket():
     if projectile_scene == null:
         push_error("Assign projectile scene in inspector!")
@@ -60,7 +63,7 @@ func shoot_rocket():
 
 
 func shoot_grappling_hook():
-    if projectile_scene == null:
+    if grappling_hook_scene == null:
         push_error("Assign hook projectile scene in inspector!")
         return
 
@@ -74,7 +77,7 @@ func shoot_grappling_hook():
         push_error("Failed to find player")
         return
     
-    grappling_hook.reparent(player.line_holder, false)
+    player.line_holder.add_child(grappling_hook)
 
     var start_pos = get_viewport_rect().size / 2.0
     start_pos = get_canvas_transform().affine_inverse() * start_pos
