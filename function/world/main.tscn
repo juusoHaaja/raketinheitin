@@ -29,10 +29,10 @@ scale = Vector2(8, 8)
 texture = ExtResource("4_gs4ui")
 stretch_mode = 1
 
+[node name="ChunkParent" parent="." unique_id=1388262308 instance=ExtResource("2_7nlgr")]
+
 [node name="Player" parent="." unique_id=58689154 instance=ExtResource("3_6qdvf")]
 position = Vector2(586, 296)
-
-[node name="ChunkParent" parent="." unique_id=1388262308 instance=ExtResource("2_7nlgr")]
 
 [node name="Gem" parent="." unique_id=4840960 instance=ExtResource("5_sg8pp")]
 position = Vector2(348, 24)

@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://dx6xi8exx3s5h" path="res://function/player/grapple_line.gd" id="1_7hxqw"]
 [ext_resource type="Texture2D" uid="uid://bhhpb3avkqxce" path="res://art/player/chain.png" id="2_8qgqi"]
-[ext_resource type="Texture2D" uid="uid://6ii76g611t6d" path="res://icon.svg" id="2_sgsg2"]
+[ext_resource type="Texture2D" uid="uid://dvqpjbvc0wi0t" path="res://art/player/hook.png" id="3_8qgqi"]
 
 [node name="GrappleLine" type="Node2D" unique_id=865385783]
 script = ExtResource("1_7hxqw")
@@ -23,7 +23,9 @@ texture_mode = 1
 
 [node name="Sprite2D" type="Sprite2D" parent="HookHolder/Hook" unique_id=1120124159]
 texture_filter = 1
-scale = Vector2(0.2, 0.2)
-texture = ExtResource("2_sgsg2")
+position = Vector2(-16, 1)
+rotation = -1.5707964
+scale = Vector2(2, 2)
+texture = ExtResource("3_8qgqi")
 
 [node name="RayCast2D" type="RayCast2D" parent="HookHolder/Hook" unique_id=648772523]
