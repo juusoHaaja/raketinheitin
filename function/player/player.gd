@@ -96,7 +96,7 @@ func _physics_process(delta: float) -> void:
     # During gameplay, request priority generation around player
     _request_nearby_chunks()
 
-    var wish_dir: Vector2 = Input.get_vector("left", "right", "up", "down")
+    wish_dir = Input.get_vector("left", "right", "up", "down")
 
     if grounded():
         if linear_velocity.x * wish_dir.x < 500.0:
