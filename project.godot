@@ -11,8 +11,13 @@ config_version=5
 [application]
 
 config/name="RAKETINHEITIN"
+run/main_scene="uid://dx36bt4enquuu"
 config/features=PackedStringArray("4.6", "Forward Plus")
 config/icon="res://icon.svg"
+
+[debug]
+
+gdscript/warnings/integer_division=0
 
 [physics]
 

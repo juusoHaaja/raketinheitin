@@ -1,6 +1,0 @@
-[gd_scene format=3 uid="uid://cqsygijl13nuw"]
-
-[ext_resource type="Script" uid="uid://7r4227ixymhc" path="res://function/world/tilemap.gd" id="1_sorms"]
-
-[node name="Tilemap" type="Node2D" unique_id=2117706246]
-script = ExtResource("1_sorms")
