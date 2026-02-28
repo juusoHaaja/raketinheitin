@@ -8,8 +8,7 @@ var circle_tool: CircleTool
 @onready var chunk_parent: ChunkParent = $ChunkParent
 
 func _ready():
-    circle_tool = CircleTool.new()
-    circle_tool.grid = chunk_parent.chunks[0]
+    circle_tool = CircleTool.new(3.0)
 
 func _unhandled_input(event: InputEvent):
     if event is InputEventMouseButton and event.pressed:
