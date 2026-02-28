@@ -1,0 +1,3 @@
+[gd_scene format=3 uid="uid://j4dyf70m4cdn"]
+
+[node name="DebrisParticleMaterial" type="GPUParticles2D" unique_id=590740683]

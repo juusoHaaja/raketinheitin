@@ -12,6 +12,11 @@
 [ext_resource type="AudioStream" uid="uid://cgamjgl4bh8dl" path="res://audio/sfx/explosions/explosion(6).wav" id="11_ulaf4"]
 [ext_resource type="AudioStream" uid="uid://d3dogs2csclik" path="res://audio/sfx/explosions/explosion(7).wav" id="12_vemwm"]
 [ext_resource type="AudioStream" uid="uid://b2cyrebxt87uw" path="res://audio/sfx/explosions/explosion(8).wav" id="13_hwk74"]
+[ext_resource type="AudioStream" uid="uid://cblqcv0yj4o8g" path="res://audio/sfx/pickup/pickupCoin(1).wav" id="14_yefev"]
+[ext_resource type="AudioStream" uid="uid://clhljn0w6w2av" path="res://audio/sfx/pickup/pickupCoin(2).wav" id="15_uk2ed"]
+[ext_resource type="AudioStream" uid="uid://dtwvvstk620lc" path="res://audio/sfx/pickup/pickupCoin.wav" id="16_ulaf4"]
+[ext_resource type="AudioStream" uid="uid://ddir1vqcxvau5" path="res://audio/sfx/pickup/pickupCoin(1)1.wav" id="17_ulaf4"]
+[ext_resource type="AudioStream" uid="uid://qjjltbdrr2vw" path="res://audio/sfx/pickup/pickupCoinaa.wav" id="18_vemwm"]
 
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_c0i3b"]
 friction = 0.2
@@ -79,3 +84,21 @@ stream = ExtResource("12_vemwm")
 
 [node name="boom8" type="AudioStreamPlayer" parent="sfx/Explosions" unique_id=1365826008]
 stream = ExtResource("13_hwk74")
+
+[node name="Pickup" parent="sfx" unique_id=1796649544 instance=ExtResource("5_qdvee")]
+volume_db = -10.0
+
+[node name="p1" type="AudioStreamPlayer" parent="sfx/Pickup" unique_id=310424907]
+stream = ExtResource("14_yefev")
+
+[node name="p2" type="AudioStreamPlayer" parent="sfx/Pickup" unique_id=1597267178]
+stream = ExtResource("15_uk2ed")
+
+[node name="p3" type="AudioStreamPlayer" parent="sfx/Pickup" unique_id=1058735942]
+stream = ExtResource("16_ulaf4")
+
+[node name="p4" type="AudioStreamPlayer" parent="sfx/Pickup" unique_id=2106997004]
+stream = ExtResource("17_ulaf4")
+
+[node name="p5" type="AudioStreamPlayer" parent="sfx/Pickup" unique_id=641753794]
+stream = ExtResource("18_vemwm")

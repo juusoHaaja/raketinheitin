@@ -38,7 +38,7 @@ animations = [{
 }],
 "loop": true,
 "name": &"default",
-"speed": 16.0
+"speed": 32.0
 }]
 
 [node name="Projectile" type="Area2D" unique_id=1683257601]
@@ -53,4 +53,4 @@ position = Vector2(-1.4901161e-08, -1.4901161e-08)
 scale = Vector2(4, 4)
 sprite_frames = SubResource("SpriteFrames_u33cf")
 autoplay = "default"
-frame_progress = 0.9118797
+frame_progress = 0.8695855
