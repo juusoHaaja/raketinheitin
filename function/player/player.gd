@@ -6,6 +6,7 @@ class_name Player
 @onready var line_holder = $Lines
 @onready var collider = $CollisionShape2D
 @onready var boom_sfx: SoundEffect = $sfx/Explosions
+@onready var pickup_sfx: SoundEffect = $sfx/Pickup
 
 var local_collisions: PackedVector2Array
 var jump_timer:Timer = Timer.new()
@@ -68,4 +69,6 @@ func _integrate_forces(state: PhysicsDirectBodyState2D):
 
 func boom():
     boom_sfx.play_random()
-    print("s")
+
+func pickuop():
+    pickup_sfx.play_random()
