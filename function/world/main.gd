@@ -1,11 +1,19 @@
 # world/main.gd
 extends Node2D
+class_name Main
+
+var instance: Main
 
 @export var projectile_scene: PackedScene
+
+@export var player: Player
 
 var circle_tool: CircleTool
 
 @onready var chunk_parent: ChunkParent = $ChunkParent
+
+func _enter_tree() -> void:
+    instance = self
 
 func _ready():
     circle_tool = CircleTool.new(6.0)
@@ -41,4 +49,5 @@ func shoot_rocket():
     
     rocket.explosion_radius = circle_tool.radius
     rocket.initialize(start_pos, direction, circle_tool)
+    rocket.connect("exploded", player.boom)
     add_child(rocket)
