@@ -11,6 +11,8 @@ class_name Player
 var local_collisions: PackedVector2Array
 var jump_timer: Timer = Timer.new()
 
+var dir := false
+
 var jump_on_cooldown = false
 
 var grappling_line_force: float = 100000.0
