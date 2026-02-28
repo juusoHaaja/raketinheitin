@@ -22,7 +22,7 @@ func _ready():
         dm.name = "DestructionManager"
         add_child(dm)
     
-        circle_tool = CircleTool.new(6.0)
+        circle_tool = CircleTool.new(16.0)
 
 func _unhandled_input(event: InputEvent):
     if event is InputEventMouseButton and event.pressed:
