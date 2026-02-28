@@ -17,10 +17,10 @@ func _unhandled_input(event: InputEvent):
         
         # Scroll to change explosion size
         if event.button_index == MOUSE_BUTTON_WHEEL_UP:
-            circle_tool.radius = min(circle_tool.radius + 0.5, 10.0)
+            circle_tool.set_radius(circle_tool.radius + 0.5)
             print("Explosion radius: ", circle_tool.radius)
         elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
-            circle_tool.radius = max(circle_tool.radius - 0.5, 1.0)
+            circle_tool.set_radius(circle_tool.radius - 0.5)
             print("Explosion radius: ", circle_tool.radius)
 
 func shoot_rocket():
