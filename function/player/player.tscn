@@ -7,7 +7,7 @@
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_c0i3b"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_c0i3b"]
-size = Vector2(40, 65)
+size = Vector2(72, 120)
 
 [node name="Player" type="RigidBody2D" unique_id=58689154]
 collision_layer = 2
@@ -30,7 +30,7 @@ scale = Vector2(8, 8)
 texture = ExtResource("3_jgmqg")
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1670625849]
-position = Vector2(-1, 0.5)
+position = Vector2(4, 4)
 shape = SubResource("RectangleShape2D_c0i3b")
 
 [node name="MeshInstance2D" type="MeshInstance2D" parent="." unique_id=1736626821]
