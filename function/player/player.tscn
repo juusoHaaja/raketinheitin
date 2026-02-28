@@ -5,6 +5,7 @@
 [ext_resource type="Texture2D" uid="uid://bhdkrfmh54jox" path="res://art/player/mina.png" id="3_jgmqg"]
 
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_c0i3b"]
+friction = 0.2
 
 [sub_resource type="CapsuleShape2D" id="CapsuleShape2D_c0i3b"]
 radius = 35.0
