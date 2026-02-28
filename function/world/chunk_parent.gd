@@ -28,8 +28,7 @@ func get_chunk(pos: Vector2i) -> Chunk:
     for c:Chunk in chunks:
         if c.chunk_pos == pos:
             return c
-    #return force_generate(pos)
-    return null
+    return force_generate(pos)
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
