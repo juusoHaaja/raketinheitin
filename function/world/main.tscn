@@ -5,6 +5,7 @@
 [ext_resource type="PackedScene" uid="uid://qxeheckf7g0j" path="res://function/world/projectiles/projectile.tscn" id="2_8sgfh"]
 [ext_resource type="PackedScene" uid="uid://cdagrd1fdco81" path="res://function/player/player.tscn" id="3_6qdvf"]
 [ext_resource type="PackedScene" uid="uid://bodvfx5et6e3x" path="res://function/world/resources/gem.tscn" id="5_sg8pp"]
+[ext_resource type="PackedScene" uid="uid://bjbwuadrrmb67" path="res://function/world/resources/shop.tscn" id="6_eagr0"]
 
 [node name="Main" type="Node2D" unique_id=184280079]
 script = ExtResource("1_6s3bf")
@@ -17,3 +18,5 @@ position = Vector2(586, 296)
 
 [node name="Gem" parent="." unique_id=4840960 instance=ExtResource("5_sg8pp")]
 position = Vector2(348, 24)
+
+[node name="Shop" parent="." unique_id=1921542416 instance=ExtResource("6_eagr0")]

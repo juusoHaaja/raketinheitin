@@ -1,0 +1,42 @@
+[gd_scene format=3 uid="uid://bjbwuadrrmb67"]
+
+[ext_resource type="Texture2D" uid="uid://6ii76g611t6d" path="res://icon.svg" id="1_bcphn"]
+[ext_resource type="Script" uid="uid://cgjnd5eqtshhk" path="res://function/world/resources/shop.gd" id="1_qvsii"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_k0fxq"]
+size = Vector2(640, 640)
+
+[node name="Shop" type="Area2D" unique_id=1921542416]
+script = ExtResource("1_qvsii")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=655547828]
+shape = SubResource("RectangleShape2D_k0fxq")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=734044212]
+scale = Vector2(5, 5)
+texture = ExtResource("1_bcphn")
+
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=646058556]
+visible = false
+
+[node name="MarginContainer" type="MarginContainer" parent="CanvasLayer" unique_id=1069852246]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -576.0
+offset_top = -324.0
+offset_right = 576.0
+offset_bottom = 324.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/margin_left = 200
+theme_override_constants/margin_top = 100
+theme_override_constants/margin_right = 200
+theme_override_constants/margin_bottom = 100
+
+[node name="Panel" type="Panel" parent="CanvasLayer/MarginContainer" unique_id=1192916104]
+layout_mode = 2
