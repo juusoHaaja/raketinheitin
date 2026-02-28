@@ -65,7 +65,11 @@ func shoot_grappling_hook():
         push_error("Failed to instantiate hook projectile!")
         return
 
-
+    if player == null:
+        push_error("Failed to find player")
+        return
+    
+    grappling_hook.reparent(player.line_holder, false)
 
     var start_pos = get_viewport_rect().size / 2.0
     start_pos = get_canvas_transform().affine_inverse() * start_pos
@@ -73,4 +77,3 @@ func shoot_grappling_hook():
     var direction = (target_pos - start_pos).normalized()
 
     grappling_hook.shoot(start_pos, direction)
-
