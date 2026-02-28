@@ -1,0 +1,23 @@
+[gd_scene format=3 uid="uid://cdagrd1fdco81"]
+
+[ext_resource type="Script" uid="uid://cor860stbs6x1" path="res://function/player/player.gd" id="1_p57aj"]
+[ext_resource type="Texture2D" uid="uid://6ii76g611t6d" path="res://icon.svg" id="1_w0krb"]
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_p57aj"]
+radius = 32.0
+height = 160.0
+
+[node name="Player" type="RigidBody2D" unique_id=58689154]
+lock_rotation = true
+script = ExtResource("1_p57aj")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1670625849]
+shape = SubResource("CapsuleShape2D_p57aj")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=563901597]
+texture_filter = 1
+texture_repeat = 2
+scale = Vector2(0.5, 1.3)
+texture = ExtResource("1_w0krb")
+
+[node name="MeshInstance2D" type="MeshInstance2D" parent="." unique_id=1736626821]
