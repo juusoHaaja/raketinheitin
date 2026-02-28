@@ -3,9 +3,13 @@
 [ext_resource type="Script" uid="uid://dpu54gc2ogeus" path="res://function/world/main.gd" id="1_6s3bf"]
 [ext_resource type="PackedScene" uid="uid://mbw4ot8ba0xc" path="res://function/world/chunk_parent.tscn" id="2_7nlgr"]
 [ext_resource type="PackedScene" uid="uid://qxeheckf7g0j" path="res://function/world/projectiles/projectile.tscn" id="2_8sgfh"]
+[ext_resource type="PackedScene" uid="uid://cdagrd1fdco81" path="res://function/player/player.tscn" id="3_6qdvf"]
 
 [node name="Main" type="Node2D" unique_id=184280079]
 script = ExtResource("1_6s3bf")
 projectile_scene = ExtResource("2_8sgfh")
+
+[node name="Player" parent="." unique_id=58689154 instance=ExtResource("3_6qdvf")]
+position = Vector2(511, -122)
 
 [node name="ChunkParent" parent="." unique_id=1388262308 instance=ExtResource("2_7nlgr")]
