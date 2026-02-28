@@ -2,6 +2,7 @@
 extends Node2D
 
 @export var projectile_scene: PackedScene
+@export var grappling_hook_scene: PackedScene
 
 var circle_tool: CircleTool
 
@@ -42,3 +43,25 @@ func shoot_rocket():
     rocket.explosion_radius = circle_tool.radius
     rocket.initialize(start_pos, direction, circle_tool)
     add_child(rocket)
+
+
+func shoot_grappling_hook():
+    if projectile_scene == null:
+        push_error("Assign hook projectile scene in inspector!")
+        return
+
+    var grappling_hook: GrappleLine = grappling_hook_scene.instantiate()
+
+    if grappling_hook == null:
+        push_error("Failed to instantiate hook projectile!")
+        return
+
+
+
+    var start_pos = get_viewport_rect().size / 2.0
+    start_pos = get_canvas_transform().affine_inverse() * start_pos
+    var target_pos = get_global_mouse_position()
+    var direction = (target_pos - start_pos).normalized()
+
+    grappling_hook.shoot(start_pos, direction)
+
