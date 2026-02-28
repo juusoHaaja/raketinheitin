@@ -2,6 +2,8 @@
 extends Area2D
 class_name Projectile
 
+signal exploded
+
 @export var speed: float = 1000.0
 @export var explosion_radius: float = 4.0
 @export var lifetime: float = 5.0
@@ -26,6 +28,7 @@ func _physics_process(delta: float):
         return "disable_mode"
 
 func explode():
+    emit_signal("exploded")
     circle_tool.radius = explosion_radius
     circle_tool.apply_global(global_position)
     queue_free()

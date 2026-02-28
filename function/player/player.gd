@@ -5,6 +5,7 @@ class_name Player
 @onready var ground_raycast: RayCast2D = $GroundRaycast
 @onready var line_holder = $Lines
 @onready var collider = $CollisionShape2D
+@onready var boom_sfx: SoundEffect = $sfx/Explosions
 
 var local_collisions: PackedVector2Array
 var jump_timer:Timer = Timer.new()
@@ -43,9 +44,6 @@ func _physics_process(delta: float) -> void:
         if linear_velocity.x * wish_dir.x < 500.0:
             apply_central_force(Vector2(wish_dir.x, 0) * 10000 * delta)
 
-        
-            
-
     var lines = line_holder.get_children()
 
     if wish_dir.length() > 0.1:
@@ -67,3 +65,7 @@ func _integrate_forces(state: PhysicsDirectBodyState2D):
     local_collisions.clear()
     for i in state.get_contact_count():
         local_collisions.push_back(to_local(state.get_contact_local_position(i)))
+
+func boom():
+    boom_sfx.play_random()
+    print("s")
