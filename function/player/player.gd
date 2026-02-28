@@ -22,11 +22,15 @@ func _physics_process(delta: float) -> void:
     var wish_dir = Input.get_vector("left", "right", "up", "down")
 
     if grounded():
-        if abs(linear_velocity.x) < 500.0:
+        if linear_velocity.x * wish_dir.x < 500.0:
             apply_central_force(Vector2(wish_dir.x, 0) * 100000 * delta)
 
         if wish_dir.y < 0.0:
             apply_central_force(Vector2.UP * 10000)
+    else:
+        if linear_velocity.x * wish_dir.x < 500.0:
+            apply_central_force(Vector2(wish_dir.x, 0) * 10000 * delta)
+
         
             
 
@@ -42,7 +46,7 @@ func grounded() -> bool:
         return true
     if local_collisions.size() > 0:
         for point in local_collisions:
-            if point.y > collider.shape.size.y / 2.0 - 0.01 && abs(point.x) < collider.shape.size.x / 2.0:
+            if point.y > collider.shape.height / 2.0 - collider.shape.radius and abs(point.x) < collider.shape.radius / 2.0 - 0.01:
                 return true  
 
     return false
