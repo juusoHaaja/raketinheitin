@@ -38,9 +38,8 @@ func _physics_process(delta: float) -> void:
         
 
 func grounded() -> bool:
-    #if ground_raycast.is_colliding():
-        #return true
-    print(local_collisions)
+    if ground_raycast.is_colliding():
+        return true
     if local_collisions.size() > 0:
         for point in local_collisions:
             if point.y > collider.shape.size.y / 2.0 - 0.01:
