@@ -42,7 +42,7 @@ func grounded() -> bool:
         return true
     if local_collisions.size() > 0:
         for point in local_collisions:
-            if point.y > collider.shape.size.y / 2.0 - 0.01:
+            if point.y > collider.shape.size.y / 2.0 - 0.01 && abs(point.x) < collider.shape.size.x / 2.0:
                 return true  
 
     return false
