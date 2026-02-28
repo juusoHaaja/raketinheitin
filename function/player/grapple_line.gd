@@ -35,11 +35,11 @@ func update_anchor(global_pos: Vector2):
         if event.button_index == MOUSE_BUTTON_MIDDLE:
             update_anchor(get_global_mouse_position())"""
 
-func get_angle_vector():
+func get_angle_vector() -> Vector2:
     return (anchor - global_position).normalized()
 
-func get_length():
+func get_length() -> float:
     return (anchor - global_position).length()
 
-func get_length_squared():
+func get_length_squared() -> float:
     return (anchor - global_position).length_squared()

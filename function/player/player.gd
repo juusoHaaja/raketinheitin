@@ -34,5 +34,13 @@ func _physics_process(delta: float) -> void:
             line.get_angle_vector()
         
 
-func grounded():
-    return ground_raycast.is_colliding()
+func grounded() -> bool:
+    if ground_raycast.is_colliding():
+        return true
+
+    var colliding_bodies = get_colliding_bodies()
+    for body in colliding_bodies:
+        if body.position.y < position.y + 160:
+            return true
+
+    return false
