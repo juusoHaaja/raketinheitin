@@ -42,6 +42,5 @@ shape = SubResource("CapsuleShape2D_c0i3b")
 target_position = Vector2(0, 5)
 
 [node name="Camera2D" type="Camera2D" parent="." unique_id=1767148033]
-zoom = Vector2(2, 2)
 
 [node name="Inventory" parent="." unique_id=1315811495 instance=ExtResource("4_jgmqg")]
