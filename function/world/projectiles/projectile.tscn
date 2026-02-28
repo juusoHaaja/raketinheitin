@@ -1,9 +1,45 @@
 [gd_scene format=3 uid="uid://qxeheckf7g0j"]
 
-[ext_resource type="Texture2D" uid="uid://6ii76g611t6d" path="res://icon.svg" id="1_8xq5x"]
 [ext_resource type="Script" uid="uid://g08ntj675j4f" path="res://function/world/projectiles/projectile.gd" id="1_lonfr"]
+[ext_resource type="Texture2D" uid="uid://bp16g8v43xn1f" path="res://art/projectiles/rocket.png" id="2_lonfr"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_lonfr"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_nwwg0"]
+atlas = ExtResource("2_lonfr")
+region = Rect2(0, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_5xx18"]
+atlas = ExtResource("2_lonfr")
+region = Rect2(16, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_h6voe"]
+atlas = ExtResource("2_lonfr")
+region = Rect2(32, 0, 16, 16)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_tqh5s"]
+atlas = ExtResource("2_lonfr")
+region = Rect2(48, 0, 16, 16)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_u33cf"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_nwwg0")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_5xx18")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_h6voe")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_tqh5s")
+}],
+"loop": true,
+"name": &"default",
+"speed": 16.0
+}]
 
 [node name="Projectile" type="Area2D" unique_id=1683257601]
 collision_layer = 4
@@ -12,7 +48,9 @@ script = ExtResource("1_lonfr")
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=665450399]
 shape = SubResource("RectangleShape2D_lonfr")
 
-[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1415463281]
+[node name="Sprite2D" type="AnimatedSprite2D" parent="." unique_id=1797999513]
 position = Vector2(-1.4901161e-08, -1.4901161e-08)
-scale = Vector2(0.15625, 0.15625)
-texture = ExtResource("1_8xq5x")
+scale = Vector2(4, 4)
+sprite_frames = SubResource("SpriteFrames_u33cf")
+autoplay = "default"
+frame_progress = 0.071987875
