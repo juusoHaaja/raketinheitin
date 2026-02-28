@@ -4,6 +4,9 @@ class_name Player
 
 @onready var ground_raycast: RayCast2D = $GroundRaycast
 @onready var line_holder = $Lines
+@onready var collider = $CollisionShape2D
+
+var local_collisions: PackedVector2Array
 
 
 # Called when the node enters the scene tree for the first time.
@@ -35,12 +38,21 @@ func _physics_process(delta: float) -> void:
         
 
 func grounded() -> bool:
-    if ground_raycast.is_colliding():
-        return true
+    #if ground_raycast.is_colliding():
+        #return true
+    print(local_collisions)
+    if local_collisions.size() > 0:
+        for point in local_collisions:
+            if point.y > collider.shape.size.y - 0.1:
+                return true
 
-    var colliding_bodies = get_colliding_bodies()
-    for body in colliding_bodies:
-        if body.position.y < position.y + 160:
-            return true
+            
+            
+    
 
     return false
+
+func _integrate_forces(state: PhysicsDirectBodyState2D):
+    local_collisions.clear()
+    for i in state.get_contact_count():
+        local_collisions.push_back(to_local(state.get_contact_local_position(i)))
