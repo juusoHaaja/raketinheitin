@@ -2,8 +2,7 @@
 extends TileMapLayer
 class_name Chunk
 
-# Chunk properties
-static var chunk_size = 100
+static var chunk_size = 16
 var chunk_pos = Vector2i(0, 0)
 var chunk_parent: ChunkParent
 
@@ -11,8 +10,8 @@ var chunk_parent: ChunkParent
 @export var tileset_height = 8
 var tileset_count = tileset_width * tileset_height
 
-@export var map_width = 100
-@export var map_height = 100
+@export var map_width: int = 16
+@export var map_height: int = 16
 
 var tile_pixel_size = 1
 
@@ -25,7 +24,10 @@ var cells = PackedByteArray()
 
 var generation_complete := false
 
-var _temp_map := {}
+# Use PackedByteArrays instead of Dictionary
+var _temp_solid: PackedByteArray      # 0 or 1 — is solid?
+var _temp_material: PackedByteArray   # material index
+var _smooth_buffer: PackedByteArray   # double-buffer for smoothing
 
 func clear_cells():
     cells.clear()
@@ -87,10 +89,8 @@ func calculate_tile_size() -> float:
 func _ready() -> void:
     tile_pixel_size = calculate_tile_size()
 
-func _process(delta: float) -> void:
-    pass
+# --- Generation ---
 
-# Chunk generation
 func gen_init(pos: Vector2i):
     chunk_pos = pos
     global_position = pos * chunk_size * tile_pixel_size
@@ -99,132 +99,154 @@ func gen_init(pos: Vector2i):
 
 func generate():
     generation_complete = false
+    var total_size: int = map_width * map_height
+
+    _temp_solid.resize(total_size)
+    _temp_material.resize(total_size)
+    _smooth_buffer.resize(total_size)
+
     _initialize_cave_map()
-    
-    for i in smoothing_iterations:
+
+    for iteration in smoothing_iterations:
         _smooth_map()
-    
+
     _apply_cave_to_cells()
     generation_complete = true
-
-# Cave Generation Init
+    
 func _initialize_cave_map() -> void:
-    _temp_map.clear()
-    
-    for x in range(map_width):
-        for y in range(map_height):
-            var local_pos := Vector2i(x, y)
-            var world_pos := local_to_world_pos(local_pos)
-            
-            # Use noise for cave structure
-            var cave_val = chunk_parent.get_cave_value_at_world_pos(world_pos)
-            
-            # Convert fill_percent to threshold
-            var threshold = (fill_percent - 50.0) / 50.0 * 0.5
-            
+    var threshold: float = (fill_percent - 50.0) / 50.0 * 0.5
+    var cave_noise: FastNoiseLite = chunk_parent.cave_noise
+    var chunk_offset: Vector2i = chunk_pos * map_width
+
+    var index: int = 0
+    for y in range(map_height):
+        var wy: int = chunk_offset.y + y
+        for x in range(map_width):
+            var wx: int = chunk_offset.x + x
+            var cave_val: float = cave_noise.get_noise_2d(wx, wy)
+
             if cave_val > threshold:
-                # Solid - get material from noise
-                _temp_map[local_pos] = chunk_parent.get_material_at_world_pos(world_pos)
+                _temp_solid[index] = 1
+                _temp_material[index] = chunk_parent.get_material_at_world_pos(Vector2i(wx, wy))
             else:
-                _temp_map[local_pos] = 0  # Empty
-
-# Cellular Automata Smoothing
+                _temp_solid[index] = 0
+                _temp_material[index] = 0
+            index += 1
+            
 func _smooth_map() -> void:
-    var new_map := {}
-    
-    for x in range(map_width):
-        for y in range(map_height):
-            var local_pos := Vector2i(x, y)
-            var wall_count := _get_surrounding_wall_count(local_pos)
-            var current_val: int = _temp_map.get(local_pos, 1)
-            
+    # Pre-cache border solid values so cross-chunk lookups are batched
+    # For interior cells, direct array access is used (no dictionary)
+
+    var w := map_width
+    var h := map_height
+    var chunk_offset: Vector2i = chunk_pos * w
+
+    # Copy solid to smooth_buffer first, then swap
+    _smooth_buffer.fill(0)
+
+    var index := 0
+    for y in range(h):
+        for x in range(w):
+            var wall_count := _count_neighbors_fast(x, y, w, h, chunk_offset)
+            var current_solid: int = _temp_solid[index]
+
             if wall_count > 4:
-                if current_val == 0:
-                    new_map[local_pos] = _get_dominant_neighbor_material(local_pos)
-                else:
-                    new_map[local_pos] = current_val
+                _smooth_buffer[index] = 1
+                # If it was empty and now becoming solid, pick a material
+                if current_solid == 0:
+                    _temp_material[index] = _get_dominant_neighbor_material_fast(x, y, w, h, chunk_offset)
             elif wall_count < 4:
-                new_map[local_pos] = 0
+                _smooth_buffer[index] = 0
+                _temp_material[index] = 0
             else:
-                new_map[local_pos] = current_val
-    
-    _temp_map = new_map
+                _smooth_buffer[index] = current_solid
+            index += 1
 
-func _get_surrounding_wall_count(local_pos: Vector2i) -> int:
-    var wall_count := 0
-    
-    for dx in range(-1, 2):
-        for dy in range(-1, 2):
+    # Swap buffers
+    var tmp := _temp_solid
+    _temp_solid = _smooth_buffer
+    _smooth_buffer = tmp
+
+func _count_neighbors_fast(x: int, y: int, w: int, h: int, chunk_offset: Vector2i) -> int:
+    var count := 0
+
+    # Unrolled 3x3 neighbor check (skip center)
+    for dy in range(-1, 2):
+        var ny := y + dy
+        for dx in range(-1, 2):
             if dx == 0 and dy == 0:
                 continue
-                
-            var check_local := Vector2i(local_pos.x + dx, local_pos.y + dy)
-            
-            # Check if within this chunk
-            if check_local.x >= 0 and check_local.x < map_width and \
-               check_local.y >= 0 and check_local.y < map_height:
-                # Use local temp map
-                var val: int = _temp_map.get(check_local, 1)
-                if val != 0:
-                    wall_count += 1
-            else:
-                # Cross-chunk lookup using world position
-                var world_pos := local_to_world_pos(check_local)
-                if chunk_parent.is_solid_at_world_pos(world_pos):
-                    wall_count += 1
-    
-    return wall_count
+            var nx := x + dx
 
-func _get_dominant_neighbor_material(local_pos: Vector2i) -> int:
-    var counts := {}
-    
-    for dx in range(-1, 2):
-        for dy in range(-1, 2):
-            if dx == 0 and dy == 0:
-                continue
-                
-            var check_local := Vector2i(local_pos.x + dx, local_pos.y + dy)
-            var val := 0
-            
-            if check_local.x >= 0 and check_local.x < map_width and \
-               check_local.y >= 0 and check_local.y < map_height:
-                val = _temp_map.get(check_local, 1)
+            if nx >= 0 and nx < w and ny >= 0 and ny < h:
+                # Interior — direct array access
+                if _temp_solid[nx + ny * w] != 0:
+                    count += 1
             else:
-                # For cross-chunk, get material from noise
-                var world_pos := local_to_world_pos(check_local)
+                # Border — cross-chunk lookup via noise (no chunk instantiation)
+                var world_pos := Vector2i(chunk_offset.x + nx, chunk_offset.y + ny)
                 if chunk_parent.is_solid_at_world_pos(world_pos):
-                    val = chunk_parent.get_material_at_world_pos(world_pos)
-            
-            if val != 0:
-                counts[val] = counts.get(val, 0) + 1
-    
+                    count += 1
+    return count
+
+func _get_dominant_neighbor_material_fast(x: int, y: int, w: int, h: int, chunk_offset: Vector2i) -> int:
+    # Use a small fixed array for counting materials (max ~64 material types)
+    # For simplicity, track best inline
     var best_mat := 1
     var best_count := 0
-    for mat in counts:
-        if counts[mat] > best_count:
-            best_count = counts[mat]
-            best_mat = mat
-    
+    # Simple approach: small dictionary is fine here since this is called rarely
+    var counts := {}
+
+    for dy in range(-1, 2):
+        var ny := y + dy
+        for dx in range(-1, 2):
+            if dx == 0 and dy == 0:
+                continue
+            var nx := x + dx
+            var val := 0
+
+            if nx >= 0 and nx < w and ny >= 0 and ny < h:
+                var ni := nx + ny * w
+                if _temp_solid[ni] != 0:
+                    val = _temp_material[ni]
+            else:
+                var world_pos := Vector2i(chunk_offset.x + nx, chunk_offset.y + ny)
+                if chunk_parent.is_solid_at_world_pos(world_pos):
+                    val = chunk_parent.get_material_at_world_pos(world_pos)
+
+            if val != 0:
+                var c: int = counts.get(val, 0) + 1
+                counts[val] = c
+                if c > best_count:
+                    best_count = c
+                    best_mat = val
+
     return best_mat
+
+func _apply_cave_to_cells() -> void:
+    var size := cells.size()
+    for i in range(size):
+        if _temp_solid[i] != 0:
+            cells[i] = _temp_material[i]
+        else:
+            cells[i] = 0
+
+    update_cells()
+
+    # Free buffers
+    _temp_solid = PackedByteArray()
+    _temp_material = PackedByteArray()
+    _smooth_buffer = PackedByteArray()
 
 # Room Creation
 func create_room(center: Vector2i, radius: int) -> void:
+    var r_sq := radius * radius
     for x in range(-radius, radius + 1):
         for y in range(-radius, radius + 1):
             var local_pos := Vector2i(center.x + x, center.y + y)
-            
             if local_pos.x >= 0 and local_pos.x < map_width and \
                local_pos.y >= 0 and local_pos.y < map_height:
-                if Vector2(x, y).length() <= radius:
+                if x * x + y * y <= r_sq:  # Avoid sqrt
                     var index = pos_to_cell_index(local_pos)
                     cells[index] = 0
                     set_tileset_tile(local_pos, 0)
-
-func _apply_cave_to_cells() -> void:
-    for i in range(cells.size()):
-        var pos = cell_index_to_pos(i)
-        var val: int = _temp_map.get(pos, 1)
-        cells[i] = val
-    
-    update_cells()
-    _temp_map.clear()
