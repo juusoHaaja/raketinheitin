@@ -37,7 +37,7 @@ func _unhandled_input(event: InputEvent):
             circle_tool.set_radius(circle_tool.radius - 0.5)
             print("Explosion radius: ", circle_tool.radius)
 
-        if event.button_index == MOUSE_BUTTON_MIDDLE:
+        if event.button_index == MOUSE_BUTTON_RIGHT:
             shoot_grappling_hook()
 
 func shoot_rocket():

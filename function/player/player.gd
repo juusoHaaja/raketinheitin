@@ -7,6 +7,7 @@ class_name Player
 @onready var collider = $CollisionShape2D
 @onready var boom_sfx: SoundEffect = $sfx/Explosions
 @onready var pickup_sfx: SoundEffect = $sfx/Pickup
+@onready var sprite = $Sprite2D
 
 var local_collisions: PackedVector2Array
 var jump_timer:Timer = Timer.new()
@@ -15,6 +16,8 @@ var jump_on_cooldown = false
 
 var grappling_line_force: float = 100000.0
 var max_hooks: int = 4
+
+var dir = false
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
@@ -33,10 +36,16 @@ func jump_timer_timeout():
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
-    pass
+    if wish_dir.x < 0:
+        dir = true
+    if wish_dir.x > 0:
+        dir = false
+    sprite.flip_h = dir
+
+var wish_dir = Vector2.ZERO
 
 func _physics_process(delta: float) -> void:
-    var wish_dir = Input.get_vector("left", "right", "up", "down")
+    wish_dir = Input.get_vector("left", "right", "up", "down")
 
     if grounded():
         if linear_velocity.x * wish_dir.x < 500.0:
