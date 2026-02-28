@@ -1,0 +1,7 @@
+[gd_scene format=3 uid="uid://b2yijowbrjpyp"]
+
+[ext_resource type="Script" uid="uid://b04na8238o8we" path="res://function/audio/sfx/sound_effect.gd" id="1_iovno"]
+
+[node name="SoundEffect" type="Node2D" unique_id=517234415]
+script = ExtResource("1_iovno")
+volume_db = 1.0

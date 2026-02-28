@@ -2,6 +2,8 @@
 extends Area2D
 class_name Projectile
 
+signal exploded
+
 @export var speed: float = 1000.0
 @export var explosion_radius: float = 4.0
 @export var lifetime: float = 5.0
@@ -15,6 +17,8 @@ func initialize(start_pos: Vector2, direction: Vector2, p_circle_tool: TileTool)
     velocity = direction.normalized() * speed
     circle_tool = p_circle_tool
     body_entered.connect(_on_body_entered)
+    connect("body_entered", body_enter)
+    rotation = direction.angle()
 
 func _physics_process(delta: float):
     position += velocity * delta
@@ -24,6 +28,7 @@ func _physics_process(delta: float):
         queue_free()
 
 func explode():
+    emit_signal("exploded")
     circle_tool.radius = explosion_radius
     
     # Get destroyed tiles before applying

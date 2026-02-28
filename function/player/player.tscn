@@ -4,6 +4,15 @@
 [ext_resource type="PackedScene" uid="uid://d2k2ir7yhnfr2" path="res://function/player/grapple_line.tscn" id="3_c0i3b"]
 [ext_resource type="Texture2D" uid="uid://bhdkrfmh54jox" path="res://art/player/mina.png" id="3_jgmqg"]
 [ext_resource type="PackedScene" uid="uid://dr015heujwhl" path="res://function/world/resources/inventory.tscn" id="4_jgmqg"]
+[ext_resource type="PackedScene" uid="uid://b2yijowbrjpyp" path="res://function/audio/sfx/sound_effect.tscn" id="5_qdvee"]
+[ext_resource type="AudioStream" uid="uid://d3eac178u3yxn" path="res://audio/sfx/explosions/explosion(1).wav" id="6_o035d"]
+[ext_resource type="AudioStream" uid="uid://bt74ng1o2es2w" path="res://audio/sfx/explosions/explosion(2).wav" id="7_fces5"]
+[ext_resource type="AudioStream" uid="uid://dbwtdtabaveax" path="res://audio/sfx/explosions/explosion(3).wav" id="8_5577t"]
+[ext_resource type="AudioStream" uid="uid://1dc5mscsn35k" path="res://audio/sfx/explosions/explosion(4).wav" id="9_yefev"]
+[ext_resource type="AudioStream" uid="uid://ccut3oyaisus2" path="res://audio/sfx/explosions/explosion(5).wav" id="10_uk2ed"]
+[ext_resource type="AudioStream" uid="uid://cgamjgl4bh8dl" path="res://audio/sfx/explosions/explosion(6).wav" id="11_ulaf4"]
+[ext_resource type="AudioStream" uid="uid://d3dogs2csclik" path="res://audio/sfx/explosions/explosion(7).wav" id="12_vemwm"]
+[ext_resource type="AudioStream" uid="uid://b2cyrebxt87uw" path="res://audio/sfx/explosions/explosion(8).wav" id="13_hwk74"]
 
 [sub_resource type="PhysicsMaterial" id="PhysicsMaterial_c0i3b"]
 friction = 0.2
@@ -44,3 +53,32 @@ target_position = Vector2(0, 5)
 [node name="Camera2D" type="Camera2D" parent="." unique_id=1767148033]
 
 [node name="Inventory" parent="." unique_id=1315811495 instance=ExtResource("4_jgmqg")]
+
+[node name="sfx" type="Node2D" parent="." unique_id=1708712860]
+
+[node name="Explosions" parent="sfx" unique_id=517234415 instance=ExtResource("5_qdvee")]
+volume_db = -10.0
+
+[node name="boom1" type="AudioStreamPlayer" parent="sfx/Explosions" unique_id=414572921]
+stream = ExtResource("6_o035d")
+
+[node name="boom2" type="AudioStreamPlayer" parent="sfx/Explosions" unique_id=123204378]
+stream = ExtResource("7_fces5")
+
+[node name="boom3" type="AudioStreamPlayer" parent="sfx/Explosions" unique_id=649542008]
+stream = ExtResource("8_5577t")
+
+[node name="boom4" type="AudioStreamPlayer" parent="sfx/Explosions" unique_id=1141722807]
+stream = ExtResource("9_yefev")
+
+[node name="boom5" type="AudioStreamPlayer" parent="sfx/Explosions" unique_id=1005528703]
+stream = ExtResource("10_uk2ed")
+
+[node name="boom6" type="AudioStreamPlayer" parent="sfx/Explosions" unique_id=169904740]
+stream = ExtResource("11_ulaf4")
+
+[node name="boom7" type="AudioStreamPlayer" parent="sfx/Explosions" unique_id=612924705]
+stream = ExtResource("12_vemwm")
+
+[node name="boom8" type="AudioStreamPlayer" parent="sfx/Explosions" unique_id=1365826008]
+stream = ExtResource("13_hwk74")
