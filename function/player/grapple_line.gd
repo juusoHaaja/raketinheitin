@@ -21,7 +21,7 @@ var shot_dir: Vector2 = Vector2.ZERO
 @onready var player: Player = get_parent().get_parent()
 @onready var hook: Node2D = $HookHolder/Hook
 @onready var hook_raycast: RayCast2D = $HookHolder/Hook/RayCast2D
-@onready var hook_sprite: Sprite2D = $HookHolder/Hook/Sprite2D
+@onready var hook_sprite: Node2D = $HookHolder/Hook/Sprite2D
 
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
