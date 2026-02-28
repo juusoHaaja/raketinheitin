@@ -9,11 +9,14 @@
 script = ExtResource("1_6s3bf")
 projectile_scene = ExtResource("2_8sgfh")
 
-[node name="ChunkParent" parent="." unique_id=1388262308 instance=ExtResource("2_7nlgr")]
-
 [node name="CanvasModulate" type="CanvasModulate" parent="." unique_id=1394150720]
 color = Color(0, 0, 0, 1)
 
+[node name="ChunkParent" parent="." unique_id=1388262308 instance=ExtResource("2_7nlgr")]
+
 [node name="PointLight2D" type="PointLight2D" parent="." unique_id=1186394687]
+position = Vector2(432, 230)
 energy = 10.72
+shadow_enabled = true
 texture = ExtResource("4_6qdvf")
+texture_scale = 3.34
