@@ -3,35 +3,27 @@
 [ext_resource type="Script" uid="uid://dlgj5cv64faho" path="res://function/world/chunk.gd" id="1_6hfvd"]
 [ext_resource type="Texture2D" uid="uid://pl6sb6yydcdo" path="res://art/spritesheets/terrain.png" id="1_duv6g"]
 
-[sub_resource type="OccluderPolygon2D" id="OccluderPolygon2D_duv6g"]
-polygon = PackedVector2Array(-4, -4, 4, -4, 4, 4, -4, 4)
-
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_pixdd"]
 texture = ExtResource("1_duv6g")
 texture_region_size = Vector2i(8, 8)
 0:0/0 = 0
-0:0/0/occlusion_layer_0/polygon_0/polygon = SubResource("OccluderPolygon2D_duv6g")
 0:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-4, -4, 4, -4, 4, 4, -4, 4)
 1:0/0 = 0
-1:0/0/occlusion_layer_0/polygon_0/polygon = SubResource("OccluderPolygon2D_duv6g")
 1:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-4, -4, 4, -4, 4, 4, -4, 4)
 2:0/0 = 0
-2:0/0/occlusion_layer_0/polygon_0/polygon = SubResource("OccluderPolygon2D_duv6g")
 2:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-4, -4, 4, -4, 4, 4, -4, 4)
 3:0/0 = 0
-3:0/0/occlusion_layer_0/polygon_0/polygon = SubResource("OccluderPolygon2D_duv6g")
 3:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-4, -4, 4, -4, 4, 4, -4, 4)
 4:0/0 = 0
-4:0/0/occlusion_layer_0/polygon_0/polygon = SubResource("OccluderPolygon2D_duv6g")
 4:0/0/physics_layer_0/polygon_0/points = PackedVector2Array(-4, -4, 4, -4, 4, 4, -4, 4)
 
 [sub_resource type="TileSet" id="TileSet_5ie0t"]
 tile_size = Vector2i(8, 8)
-occlusion_layer_0/light_mask = 1
 physics_layer_0/collision_layer = 1
 physics_layer_0/collision_mask = 3
 sources/0 = SubResource("TileSetAtlasSource_pixdd")
 
 [node name="Chunk" type="TileMapLayer" unique_id=497056709]
 tile_set = SubResource("TileSet_5ie0t")
+occlusion_enabled = false
 script = ExtResource("1_6hfvd")
