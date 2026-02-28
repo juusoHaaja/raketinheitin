@@ -6,6 +6,7 @@ class_name Player
 @onready var collider = $CollisionShape2D
 @onready var boom_sfx: SoundEffect = $sfx/Explosions
 @onready var pickup_sfx: SoundEffect = $sfx/Pickup
+@onready var sprite = $Sprite2D
 
 var local_collisions: PackedVector2Array
 var jump_timer: Timer = Timer.new()
@@ -78,7 +79,13 @@ func jump_timer_timeout() -> void:
     jump_on_cooldown = false
 
 func _process(delta: float) -> void:
-    pass
+    if wish_dir.x < 0:
+        dir = true
+    if wish_dir.x > 0:
+        dir = false
+    sprite.flip_h = dir
+
+var wish_dir = Vector2.ZERO
 
 func _physics_process(delta: float) -> void:
     if _waiting_for_chunks:
