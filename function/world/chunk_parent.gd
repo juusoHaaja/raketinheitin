@@ -11,7 +11,7 @@ static var instance: ChunkParent
 
 @export var generation_radius := 5
 @export var border_threshold := 50
-@export var view_radius := 3
+@export var view_radius := 10
 
 # Maximum chunks to generate per frame (spreads load across frames)
 @export var max_chunks_per_frame := 2  # Increased from 1
