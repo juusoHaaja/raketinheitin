@@ -17,7 +17,6 @@ func initialize(start_pos: Vector2, direction: Vector2, p_circle_tool: TileTool)
     velocity = direction.normalized() * speed
     circle_tool = p_circle_tool
     body_entered.connect(_on_body_entered)
-    connect("body_entered", body_enter)
     rotation = direction.angle()
 
 func _physics_process(delta: float):
