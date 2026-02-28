@@ -1,9 +1,9 @@
 [gd_scene format=3 uid="uid://dx36bt4enquuu"]
 
 [ext_resource type="Script" uid="uid://dpu54gc2ogeus" path="res://function/world/main.gd" id="1_6s3bf"]
-[ext_resource type="PackedScene" uid="uid://cqsygijl13nuw" path="res://function/world/grid.tscn" id="2_7nlgr"]
+[ext_resource type="PackedScene" uid="uid://mbw4ot8ba0xc" path="res://function/world/chunk_parent.tscn" id="2_7nlgr"]
 
 [node name="Main" type="Node2D" unique_id=184280079]
 script = ExtResource("1_6s3bf")
 
-[node name="Grid" parent="." unique_id=790140437 instance=ExtResource("2_7nlgr")]
+[node name="ChunkParent" parent="." unique_id=1388262308 instance=ExtResource("2_7nlgr")]

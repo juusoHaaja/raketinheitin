@@ -1,12 +1,22 @@
 extends TileMapLayer
 class_name Grid
 
+#chunk
+
+static var chunk_size = 100 # size in tiles
+
+var chunk_pos = Vector2i(0,0)
+
+#\chunk
+
 @export var tileset_width = 4
 @export var tileset_height = 4
 var tileset_count = tileset_width*tileset_height
 
 @export var map_width = 100
 @export var map_height = 100
+
+var tile_pixel_size = 1
 
 var cells = PackedByteArray()
 
@@ -67,11 +77,24 @@ func update_cells():
         var pos = cell_index_to_pos(i)
         set_tileset_tile(pos, val)
 
+func calculate_tile_size() -> float:
+    return scale.x*tile_set.tile_size.x
+
 # Called when the node enters the scene tree for the first time.
 func _ready() -> void:
-    create_cells()
-
+    tile_pixel_size = calculate_tile_size()
 
 # Called every frame. 'delta' is the elapsed time since the previous frame.
 func _process(delta: float) -> void:
+    pass
+
+#Chunk function
+
+func gen_init(pos: Vector2i):
+    chunk_pos = pos
+    global_position = pos * chunk_size * tile_pixel_size
+    create_cells()
+
+func generate():
+    #do gen
     pass

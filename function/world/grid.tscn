@@ -1,7 +1,7 @@
 [gd_scene format=3 uid="uid://cqsygijl13nuw"]
 
 [ext_resource type="Texture2D" uid="uid://pl6sb6yydcdo" path="res://art/spritesheets/terrain.png" id="1_52fdf"]
-[ext_resource type="Script" path="res://function/world/tilemap.gd" id="1_sorms"]
+[ext_resource type="Script" uid="uid://dlgj5cv64faho" path="res://function/world/grid.gd" id="2_8aj31"]
 
 [sub_resource type="TileSetAtlasSource" id="TileSetAtlasSource_n6ctj"]
 texture = ExtResource("1_52fdf")
@@ -30,4 +30,4 @@ sources/0 = SubResource("TileSetAtlasSource_n6ctj")
 [node name="Grid" type="TileMapLayer" unique_id=790140437]
 tile_map_data = PackedByteArray(0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 2, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0, 0, 2, 0, 2, 0, 0, 0, 1, 0, 0, 0, 0, 0)
 tile_set = SubResource("TileSet_wkiwi")
-script = ExtResource("1_sorms")
+script = ExtResource("2_8aj31")
