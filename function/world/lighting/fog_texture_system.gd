@@ -14,8 +14,8 @@ const LIGHT_RADIUS_TILES := 48
 const LIGHT_INNER_RADIUS_TILES := 4
 const LIGHT_FULL_BRIGHT_RADIUS := 2
 
-# How bright explored-but-not-visible areas appear (0 = black, 1 = full)
-const EXPLORED_BRIGHTNESS := 0.55
+# How bright explored-but-not-visible areas appear (0 = black, 1 = full). 1.0 = same as player light to avoid flicker.
+const EXPLORED_BRIGHTNESS := 1.0
 # How bright the falloff edge of explored areas gets
 const EXPLORED_EDGE_BRIGHTNESS := 0.30
 # Number of tiles for the explored-area edge falloff

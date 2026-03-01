@@ -7,11 +7,13 @@
 [ext_resource type="PackedScene" uid="uid://d2k2ir7yhnfr2" path="res://function/player/grapple_line.tscn" id="3_oq4x4"]
 [ext_resource type="Texture2D" uid="uid://c63ixy25uvlr7" path="res://art/background/bg.png" id="4_gs4ui"]
 [ext_resource type="PackedScene" uid="uid://brj65ojy3hlht" path="res://function/world/lighting/fog_of_war.tscn" id="7_fog"]
+[ext_resource type="PackedScene" uid="uid://b54rwxstskxou" path="res://function/world/enemy/worm.tscn" id="8_worm"]
 
 [node name="Main" type="Node2D" unique_id=184280079 node_paths=PackedStringArray("player")]
 script = ExtResource("1_6s3bf")
 projectile_scene = ExtResource("2_8sgfh")
 grappling_hook_scene = ExtResource("3_oq4x4")
+worm_scene = ExtResource("8_worm")
 player = NodePath("Player")
 
 [node name="Node2D" type="Node2D" parent="." unique_id=1596925720]
@@ -35,3 +37,70 @@ position = Vector2(586, 296)
 
 [node name="FogOfWar" parent="." unique_id=2130879496 instance=ExtResource("7_fog")]
 z_index = 10
+
+[node name="UI" type="CanvasLayer" parent="."]
+layer = 10
+
+[node name="PlayerHealthBar" type="ProgressBar" parent="UI"]
+offset_left = 20.0
+offset_top = 20.0
+offset_right = 220.0
+offset_bottom = 44.0
+max_value = 100.0
+value = 100.0
+show_percentage = false
+
+[node name="WormHealthBar" type="ProgressBar" parent="UI"]
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 80.0
+offset_bottom = 10.0
+max_value = 150.0
+value = 150.0
+show_percentage = false
+visible = false
+
+[node name="WormSegmentBars" type="Control" parent="UI"]
+
+[node name="GameOverLayer" type="Control" parent="UI"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="Background" type="ColorRect" parent="UI/GameOverLayer"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.1, 0.1, 0.1, 0.85)
+
+[node name="VBox" type="VBoxContainer" parent="UI/GameOverLayer"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -120.0
+offset_top = -60.0
+offset_right = 120.0
+offset_bottom = 60.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 24
+
+[node name="Label" type="Label" parent="UI/GameOverLayer/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 48
+text = "You Died"
+horizontal_alignment = 1
+
+[node name="RestartButton" type="Button" parent="UI/GameOverLayer/VBox"]
+layout_mode = 2
+text = "Restart"

@@ -1,40 +1,41 @@
 extends Node2D
 class_name WormHead
 
-@export var move_speed:float = 1000.0
-@export var turn_speed:float = 1.0
+@export var move_speed: float = 1000.0
+@export var turn_speed: float = 4.0  ## Radians per second toward target
+@export var acceleration: float = 8.0  ## How quickly velocity catches up (higher = snappier)
+@export var min_speed_ratio: float = 0.15  ## Keep crawling even when facing away
 
-var target_node:Node2D
+var target_node: Node2D
 
-var dir:Vector2 = Vector2.RIGHT
-var dir_angle:float = 0
+var dir: Vector2 = Vector2.RIGHT
+var dir_angle: float = 0
+var velocity := Vector2.ZERO
 
-var velocity = Vector2.ZERO
-
-# Called when the node enters the scene tree for the first time.
-func _ready() -> void:
-    pass # Replace with function body.
-
-
-# Called every frame. 'delta' is the elapsed time since the previous frame.
-func _process(delta: float) -> void:
-    global_rotation = dir_angle
+func _process(_delta: float) -> void:
+	global_rotation = dir_angle
 
 func _physics_process(delta: float) -> void:
-    var diff = target_node.global_position-global_position
-    var target_dir = diff.angle()
-    var angle_diff = angle_difference(dir_angle,target_dir)
+	if not is_instance_valid(target_node):
+		return
+	var to_target := target_node.global_position - global_position
+	var dist_sq := to_target.length_squared()
+	if dist_sq < 1.0:
+		velocity = velocity.lerp(Vector2.ZERO, acceleration * delta)
+		global_position += velocity * delta
+		return
 
-    var alignment = abs(angle_diff) / PI
-    var motivation = (2-alignment)/2
-    var desired_speed = motivation*move_speed
+	var target_angle := to_target.angle()
+	var angle_diff := angle_difference(dir_angle, target_angle)
+	var alignment: float = 1.0 - abs(angle_diff) / PI  ## 1 = facing target, 0 = opposite
+	var motivation: float = lerp(min_speed_ratio, 1.0, alignment)
+	var desired_speed: float = motivation * move_speed
 
-    var desired_velocity = dir*desired_speed
-    
-    velocity = lerp(velocity,desired_velocity,0.5)
+	var angle_step := clampf(angle_difference(dir_angle, target_angle), -turn_speed * delta, turn_speed * delta)
+	dir_angle += angle_step
+	dir = Vector2.RIGHT.rotated(dir_angle)
 
-    global_position+= velocity*delta
-    
-    dir_angle = lerp_angle(dir_angle,target_dir,0.05)
-    dir = Vector2.RIGHT.rotated(dir_angle)
+	var desired_velocity: Vector2 = dir * desired_speed
+	velocity = velocity.lerp(desired_velocity, acceleration * delta)
+	global_position += velocity * delta
     
