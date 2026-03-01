@@ -38,3 +38,5 @@ scale = Vector2(0.5, 0.5)
 texture = ExtResource("3_wc15c")
 
 [node name="TargetNode" type="Node2D" parent="." unique_id=987264291]
+
+[node name="Line2D" type="Line2D" parent="." unique_id=453641372]
