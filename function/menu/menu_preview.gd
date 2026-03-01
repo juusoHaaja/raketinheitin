@@ -1,13 +1,19 @@
 extends Node2D
 
 ## Menu preview: only ChunkParent (random seed map). No fog, no player.
-## main_menu sets ChunkParent.world_seed = randi() so terrain is different each time.
+## Sets ChunkParent.world_seed = randi() so terrain is different each time.
 
 @onready var camera: Camera2D = $Camera2D
 @onready var chunk_parent: ChunkParent = $ChunkParent
 
 const PREVIEW_CENTER := Vector2(400.0, 300.0)
 
+
+func _enter_tree() -> void:
+	# Set seed before ChunkParent._ready() runs (children ready before parent)
+	var cp := get_node_or_null("ChunkParent") as ChunkParent
+	if cp:
+		cp.world_seed = randi()
 
 func _ready() -> void:
 	camera.make_current()

@@ -18,15 +18,15 @@ enum Move {
 @onready var hit_sfx: AudioStreamPlayer = $HitSfx
 
 @export var segment_dist: float = 100.0
-@export var contact_damage: float = 10.0
-@export var damage_cooldown: float = 1.0
+@export var contact_damage: float = 8.0
+@export var damage_cooldown: float = 1.2
 
 ## Charge attack: runs at player, breaks cells, extra damage
-@export var charge_probability: float = 0.45
+@export var charge_probability: float = 0.35
 @export var charge_speed: float = 2600.0
 @export var charge_duration_min: float = 0.5
 @export var charge_duration_max: float = 1.0
-@export var charge_damage: float = 28.0
+@export var charge_damage: float = 22.0
 @export var charge_break_radius: float = 6.5
 @export var head_move_speed: float = 1200.0
 
@@ -48,7 +48,7 @@ var player_target: Node2D = null
 @export var retreat_radius_ratio: float = 1.1
 @export var strafe_speed: float = 2.2  ## Faster strafing
 @export var close_range_threshold: float = 260.0  ## Prefer lunge when player within this distance
-@export var stationary_charge_bonus: float = 0.35  ## Extra charge chance when player barely moving
+@export var stationary_charge_bonus: float = 0.25  ## Extra charge chance when player barely moving
 
 var _orbit_angle: float = 0.0
 var _current_move: Move = Move.ORBIT
@@ -88,11 +88,14 @@ func _ready() -> void:
     _pick_next_move()
 
 func _on_segment_died(seg: Node2D) -> void:
+    var pos := seg.global_position
     var seg_health: HealthComponent = seg.get_node_or_null("Health") as HealthComponent
     if seg_health:
         seg_health.health_changed.disconnect(_on_segment_health_changed)
     segments.erase(seg)
     seg.queue_free()
+    if DestructionManager.instance:
+        DestructionManager.instance.spawn_organic_burst(pos)
     if segments.is_empty():
         health.take_damage(health.max_health)
     else:
@@ -113,6 +116,17 @@ func _sync_head_health() -> void:
             total_current += seg_health.current_health
     health.max_health = total_max
     health.current_health = total_current
+    _update_segment_bar_visibility()
+
+func _update_segment_bar_visibility() -> void:
+    ## When only one segment left, hide its health bar; main bar shows combined health.
+    var single_segment: bool = segments.size() == 1
+    for seg in segments:
+        if not is_instance_valid(seg):
+            continue
+        var bar: Node = seg.get_node_or_null("HealthBar")
+        if bar:
+            bar.visible = not single_segment
 
 func set_player_target(p: Node2D) -> void:
     player_target = p

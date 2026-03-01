@@ -8,6 +8,7 @@
 [ext_resource type="Texture2D" uid="uid://c63ixy25uvlr7" path="res://art/background/bg.png" id="4_gs4ui"]
 [ext_resource type="PackedScene" uid="uid://brj65ojy3hlht" path="res://function/world/lighting/fog_of_war.tscn" id="7_fog"]
 [ext_resource type="PackedScene" uid="uid://b54rwxstskxou" path="res://function/world/enemy/worm.tscn" id="8_worm"]
+[ext_resource type="PackedScene" uid="uid://c8k2m5pause" path="res://function/menu/pause_menu.tscn" id="9_pause"]
 
 [node name="Main" type="Node2D" unique_id=184280079 node_paths=PackedStringArray("player")]
 script = ExtResource("1_6s3bf")
@@ -176,3 +177,5 @@ horizontal_alignment = 1
 [node name="RestartButton" type="Button" parent="UI/GameOverLayer/VBox"]
 layout_mode = 2
 text = "Restart"
+
+[node name="PauseMenu" parent="." instance=ExtResource("9_pause")]
