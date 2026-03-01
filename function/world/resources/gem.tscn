@@ -1,18 +1,48 @@
 [gd_scene format=3 uid="uid://bodvfx5et6e3x"]
 
 [ext_resource type="Script" uid="uid://clf2350foy2ru" path="res://function/world/resources/gem.gd" id="1_rjsy4"]
-[ext_resource type="Texture2D" uid="uid://6ii76g611t6d" path="res://icon.svg" id="2_j7588"]
+[ext_resource type="Texture2D" uid="uid://cc1auhxte2hv4" path="res://art/gem/diamond.png" id="2_50r1u"]
+[ext_resource type="Texture2D" uid="uid://cuclqqe2v6ta6" path="res://art/gem/emerald.png" id="3_01gdm"]
+[ext_resource type="Texture2D" uid="uid://8epms6diccf0" path="res://art/gem/ruby.png" id="4_4ugwp"]
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_ih48v"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("2_50r1u")
+}],
+"loop": true,
+"name": &"diamond",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("3_01gdm")
+}],
+"loop": true,
+"name": &"emerald",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("4_4ugwp")
+}],
+"loop": true,
+"name": &"ruby",
+"speed": 5.0
+}]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_m6i4q"]
-radius = 7.0
+radius = 5.0
 
 [node name="Gem" type="RigidBody2D" unique_id=4840960]
 collision_layer = 8
 script = ExtResource("1_rjsy4")
 
-[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1349611831]
-scale = Vector2(0.1, 0.1)
-texture = ExtResource("2_j7588")
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="." unique_id=1072326787]
+scale = Vector2(2, 2)
+sprite_frames = SubResource("SpriteFrames_ih48v")
+animation = &"diamond"
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="." unique_id=1851403647]
 shape = SubResource("CircleShape2D_m6i4q")

@@ -1,0 +1,40 @@
+[gd_scene format=3 uid="uid://b54rwxstskxou"]
+
+[ext_resource type="Script" uid="uid://bbmbqfb7ap7l1" path="res://function/world/enemy/worm.gd" id="1_30phe"]
+[ext_resource type="Script" uid="uid://bucbiwcrnh6sj" path="res://function/world/enemy/worm_head.gd" id="2_1amy0"]
+[ext_resource type="Texture2D" uid="uid://6ii76g611t6d" path="res://icon.svg" id="3_wc15c"]
+
+[node name="Worm" type="Node2D" unique_id=627508341]
+script = ExtResource("1_30phe")
+
+[node name="Head" type="Node2D" parent="." unique_id=1754404088]
+position = Vector2(0, 1)
+script = ExtResource("2_1amy0")
+
+[node name="Sprite2D" type="Sprite2D" parent="Head" unique_id=2097096134]
+texture = ExtResource("3_wc15c")
+
+[node name="Segments" type="Node2D" parent="." unique_id=1634343858]
+position = Vector2(0, 1)
+
+[node name="Sprite2D" type="Sprite2D" parent="Segments" unique_id=15848496]
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("3_wc15c")
+
+[node name="Sprite2D2" type="Sprite2D" parent="Segments" unique_id=1645880105]
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("3_wc15c")
+
+[node name="Sprite2D3" type="Sprite2D" parent="Segments" unique_id=420573807]
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("3_wc15c")
+
+[node name="Sprite2D4" type="Sprite2D" parent="Segments" unique_id=623912789]
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("3_wc15c")
+
+[node name="Sprite2D5" type="Sprite2D" parent="Segments" unique_id=1700909350]
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("3_wc15c")
+
+[node name="TargetNode" type="Node2D" parent="." unique_id=987264291]
