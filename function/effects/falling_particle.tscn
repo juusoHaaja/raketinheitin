@@ -1,0 +1,14 @@
+[gd_scene format=3 uid="uid://1ky03gfi0hi7"]
+
+[ext_resource type="Script" path="res://function/effects/falling_particle.gd" id="1_falling"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_placeholder"]
+size = Vector2(12.8, 12.8)
+
+[node name="FallingParticle" type="RigidBody2D"]
+script = ExtResource("1_falling")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_placeholder")

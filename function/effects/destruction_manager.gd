@@ -228,8 +228,10 @@ func _spawn_debris(pos: Vector2, destroyed_tiles: Array[Dictionary], radius: flo
         _active_debris.append(debris)
 
 func _get_tile_size() -> float:
-    if ChunkParent.instance != null and ChunkParent.instance.chunks.size() > 0:
-        return ChunkParent.instance.chunks[0].tile_set.tile_size.x
+    if ChunkParent.instance != null:
+        var ts: float = ChunkParent.instance.get_tile_size()
+        if ts > 0.0:
+            return ts
     return 16.0  # Fallback
 
 func _get_tile_color(material_id: int) -> Color:
@@ -243,8 +245,8 @@ func _get_tile_color(material_id: int) -> Color:
     
     # Try to get color from tileset texture
     var chunk: Chunk = null
-    if ChunkParent.instance != null and ChunkParent.instance.chunks.size() > 0:
-        chunk = ChunkParent.instance.chunks[0]
+    if ChunkParent.instance != null:
+        chunk = ChunkParent.instance.get_chunk(Vector2i.ZERO)
     
     if chunk == null or chunk.tile_set == null:
         return _get_fallback_material_color(material_id)

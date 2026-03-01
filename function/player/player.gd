@@ -54,7 +54,7 @@ func _wait_for_initial_chunks() -> void:
 func _chunks_ready() -> bool:
     if not ChunkParent.instance:
         return false
-    if ChunkParent.instance.chunks.is_empty():
+    if ChunkParent.instance.get_chunks().is_empty():
         return false
 
     var player_tile: Vector2i = ChunkParent.instance.snap_global_to_grid(global_position)

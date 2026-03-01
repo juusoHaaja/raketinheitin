@@ -29,44 +29,17 @@ func _physics_process(delta: float):
 func explode():
     emit_signal("exploded")
     circle_tool.radius = explosion_radius
-    
-    # Get destroyed tiles before applying
-    var center := ChunkParent.instance.snap_global_to_grid(global_position)
-    var destroyed := _collect_tiles_in_radius(center)
-    
-    # Apply destruction to tilemap
-    circle_tool.apply_global(global_position)
-    
-    # Spawn all effects via DestructionManager
+    # Single pass: apply destruction and get destroyed tiles (no duplicate iteration or double create_explosion)
+    var destroyed: Array[Dictionary] = circle_tool.apply_global_return_destroyed(global_position)
     if DestructionManager.instance != null:
-        var tile_size: float = ChunkParent.instance.chunks[0].tile_set.tile_size.x
+        var tile_size: float = ChunkParent.instance.get_tile_size()
         DestructionManager.instance.create_explosion(
             global_position,
             destroyed,
             explosion_radius * tile_size
         )
-    
     queue_free()
 
-func _collect_tiles_in_radius(center: Vector2i) -> Array[Dictionary]:
-    var tiles: Array[Dictionary] = []
-    var radius_int := int(ceil(explosion_radius))
-    var radius_sq := explosion_radius * explosion_radius
-    
-    for y in range(center.y - radius_int, center.y + radius_int + 1):
-        for x in range(center.x - radius_int, center.x + radius_int + 1):
-            var pos := Vector2i(x, y)
-            var dist_sq := Vector2(center).distance_squared_to(Vector2(pos))
-            
-            if dist_sq <= radius_sq:
-                var tile := ChunkParent.instance.api_get_tile_pos(pos)
-                if tile != 0:
-                    tiles.append({
-                        "position": pos,
-                        "material": tile
-                    })
-    
-    return tiles
-
-func _on_body_entered(_body: Node2D):
-    explode()
+func _on_body_entered(_body: Node2D) -> void:
+    # Defer to next frame so collision callback returns immediately and cost is spread
+    call_deferred("explode")

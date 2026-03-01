@@ -1,0 +1,14 @@
+[remap]
+
+importer="glsl"
+type="RDShaderFile"
+uid="uid://caukfmmxtbytv"
+path="res://.godot/imported/fog_compute.glsl-4c66ba65bb9a013e7be009bfc0d4219d.res"
+
+[deps]
+
+source_file="res://shaders/fog_compute.glsl"
+dest_files=["res://.godot/imported/fog_compute.glsl-4c66ba65bb9a013e7be009bfc0d4219d.res"]
+
+[params]
+

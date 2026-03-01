@@ -26,12 +26,15 @@ func _process(delta: float):
     
     size = original_size * (1.0 + progress * 1.5)
     modulate.a = color.a * (1.0 - progress * progress)
-    
-    queue_redraw()
+
+    # Redraw every 2nd frame to reduce draw calls
+    if Engine.get_process_frames() % 2 == 0:
+        queue_redraw()
 
 func _draw():
     var alpha := modulate.a
-    for i in range(3, 0, -1):
-        var layer_size := size * (float(i) / 3.0)
-        var layer_alpha := alpha * (1.0 - float(i) / 4.0)
-        draw_circle(Vector2.ZERO, layer_size, Color(color.r, color.g, color.b, layer_alpha * 0.3))
+    # Two layers instead of three for better performance, still reads as soft cloud
+    for i in range(2, 0, -1):
+        var layer_size := size * (float(i) / 2.0)
+        var layer_alpha := alpha * (1.0 - float(i) / 3.0)
+        draw_circle(Vector2.ZERO, layer_size, Color(color.r, color.g, color.b, layer_alpha * 0.35))

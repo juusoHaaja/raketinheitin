@@ -9,62 +9,58 @@ var explosion_granularity: int = 8
 var granularity_off:float = 0
 var ray_segments := Array()
 
-func apply(center: Vector2i):
+## Applies the circle (destroy or place). When destroying (material_index == 0), returns
+## the list of destroyed tiles so the caller can spawn effects once (avoids double work).
+func apply(center: Vector2i) -> Array[Dictionary]:
     if material_index == 0:
         initialize_granularity()
 
+    # Ensure all chunks that could be affected by this circle are generated (fireballs, explosions, etc.)
+    ChunkParent.instance.ensure_chunks_generated_in_radius(center, radius)
+
     var radius_int := int(ceil(radius))
     var destroyed_tiles: Array[Dictionary] = []
-    
-    for y in range(radius_int*2 + 1):
-        for x in range(radius_int*2 + 1):
-            if x > radius_int:
-                x = radius_int-x
-            if y > radius_int:
-                y = radius_int-y
-            var pos := Vector2i(x, y)+center
+    var affected_chunks: Dictionary = {}  # chunk_pos -> Array of local_pos (Vector2i)
+    var cp := ChunkParent.instance
 
-
-            var distance := Vector2(center).distance_squared_to(Vector2(pos))
-            if distance > radius_squared:
+    for dy in range(-radius_int, radius_int + 1):
+        for dx in range(-radius_int, radius_int + 1):
+            if dx * dx + dy * dy > radius_squared:
                 continue
-            
-            var dont_destroy = false
+            var pos := center + Vector2i(dx, dy)
 
-            # Track what we're destroying for particles
-            if material_index == 0:  # Only when destroying
-            
-                var current_tile := ChunkParent.instance.api_get_tile_pos(pos)
-
-
-
+            if material_index == 0:  # Destroying: collect for batch
+                var current_tile := cp.api_get_tile_pos(pos)
                 if current_tile != 0:
-                    var diff = pos-center
-                    var g_index = diff_to_granularity_index(diff)
+                    var diff := pos - center
+                    var g_index := diff_to_granularity_index(diff)
                     ray_segments[g_index] -= current_tile
-                    
                     if ray_segments[g_index] < 0:
-                        dont_destroy = true
-                    if not dont_destroy:
-                        destroyed_tiles.append({
-                            "position": pos,
-                            "material": current_tile
-                        })
-            if not dont_destroy:
+                        continue
+                    destroyed_tiles.append({"position": pos, "material": current_tile})
+                    var chunk_pos := cp.get_chunk_pos(pos)
+                    var local_pos := cp.pos_modulo_chunk(pos)
+                    if not affected_chunks.has(chunk_pos):
+                        affected_chunks[chunk_pos] = []
+                    affected_chunks[chunk_pos].append(local_pos)
+            else:  # Placing: one tile at a time
                 set_tile(pos, material_index)
-    
-    # Spawn particles if we destroyed tiles
-    if destroyed_tiles.size() > 0:
-        _spawn_destruction_particles(center, destroyed_tiles)
 
-func _spawn_destruction_particles(center: Vector2i, destroyed_tiles: Array[Dictionary]) -> void:
-    if DestructionManager.instance == null:
+    for key in affected_chunks:
+        var chunk_pos := key as Vector2i
+        var chunk: Chunk = cp.get_chunk(chunk_pos)
+        if chunk.generation_complete:
+            chunk.destroy_tiles_batch(affected_chunks[chunk_pos])
+
+    return destroyed_tiles
+
+## Call after apply() when you want to spawn destruction effects (e.g. from editor tools).
+## Projectiles use apply_global_return_destroyed() and call create_explosion once themselves.
+func spawn_destruction_effects(center: Vector2i, destroyed_tiles: Array[Dictionary]) -> void:
+    if DestructionManager.instance == null or destroyed_tiles.is_empty():
         return
-    
-    # Convert tile position to world position
-    var tile_size: float = ChunkParent.instance.chunks[0].tile_set.tile_size.x
+    var tile_size: float = ChunkParent.instance.get_tile_size()
     var world_pos := Vector2(center) * tile_size + Vector2(tile_size / 2.0, tile_size / 2.0)
-    
     DestructionManager.instance.create_explosion(world_pos, destroyed_tiles, radius * tile_size)
 
 func diff_to_granularity_index(diff: Vector2i) -> int:
@@ -84,6 +80,11 @@ func initialize_granularity():
 func set_radius(r: float):
     radius = r
     radius_squared = r * r
+
+## Apply at world position and return destroyed tiles (for projectiles: single iteration, single create_explosion).
+func apply_global_return_destroyed(global_pos: Vector2) -> Array[Dictionary]:
+    var center: Vector2i = ChunkParent.instance.snap_global_to_grid(global_pos)
+    return apply(center)
 
 func _init(r: float = 3.0) -> void:
     set_radius(r)

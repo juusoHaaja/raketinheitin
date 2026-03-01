@@ -12,6 +12,7 @@ var instance: Main
 var circle_tool: CircleTool
 
 @onready var chunk_parent: ChunkParent = $ChunkParent
+@onready var fog_of_war: Node2D = $FogOfWar
 
 func _enter_tree() -> void:
     instance = self
@@ -60,6 +61,15 @@ func shoot_rocket():
     rocket.initialize(start_pos, direction, circle_tool)
     rocket.connect("exploded", player.boom)
     add_child(rocket)
+    if fog_of_war != null and fog_of_war.has_method("track_projectile"):
+        fog_of_war.track_projectile(rocket)
+        rocket.tree_exiting.connect(func(): fog_of_war.untrack_projectile(rocket))
+    rocket.exploded.connect(func(): _on_rocket_exploded(rocket))
+
+func _on_rocket_exploded(rocket: Projectile) -> void:
+    if fog_of_war == null or not fog_of_war.has_method("add_explosion_flash"):
+        return
+    fog_of_war.add_explosion_flash(rocket.global_position, rocket.explosion_radius)
 
 
 func shoot_grappling_hook():

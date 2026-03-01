@@ -55,8 +55,10 @@ func _process(delta: float):
     if progress > 0.7:
         linear_damp = 5.0
         angular_damp = 5.0
-    
-    queue_redraw()
+
+    # Redraw every 2nd frame to cut draw calls while keeping motion smooth
+    if Engine.get_process_frames() % 2 == 0:
+        queue_redraw()
 
 func _draw():
     var points := PackedVector2Array()

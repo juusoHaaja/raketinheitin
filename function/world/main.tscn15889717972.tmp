@@ -42,3 +42,4 @@ position = Vector2(348, 24)
 
 [node name="FogOfWar" parent="." unique_id=2130879496 instance=ExtResource("7_fog")]
 z_index = 10
+use_gpu_fog = null
