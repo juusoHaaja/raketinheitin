@@ -297,4 +297,3 @@ func _physics_process(delta: float) -> void:
 
     _record_head_path()
     _update_segments_from_path(delta)
-

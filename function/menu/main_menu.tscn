@@ -1,8 +1,8 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://c5mel36g13jcl"]
 
-[ext_resource type="Script" path="res://function/menu/main_menu.gd" id="1_menu"]
+[ext_resource type="Script" uid="uid://d4hiycl1dmi53" path="res://function/menu/main_menu.gd" id="1_menu"]
 
-[node name="MainMenu" type="Control"]
+[node name="MainMenu" type="Control" unique_id=1184376524]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -11,7 +11,7 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_menu")
 
-[node name="HBox" type="HBoxContainer" parent="."]
+[node name="HBox" type="HBoxContainer" parent="." unique_id=2002701399]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -19,39 +19,38 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="LeftPanel" type="PanelContainer" parent="HBox"]
-layout_mode = 2
-theme_override_constants/separation = 0
+[node name="LeftPanel" type="PanelContainer" parent="HBox" unique_id=859656419]
 custom_minimum_size = Vector2(320, 0)
+layout_mode = 2
 size_flags_horizontal = 0
 
-[node name="MarginContainer" type="MarginContainer" parent="HBox/LeftPanel"]
+[node name="MarginContainer" type="MarginContainer" parent="HBox/LeftPanel" unique_id=17079120]
 layout_mode = 2
 theme_override_constants/margin_left = 24
 theme_override_constants/margin_top = 24
 theme_override_constants/margin_right = 24
 theme_override_constants/margin_bottom = 24
 
-[node name="VBox" type="VBoxContainer" parent="HBox/LeftPanel/MarginContainer"]
+[node name="VBox" type="VBoxContainer" parent="HBox/LeftPanel/MarginContainer" unique_id=2112719718]
 layout_mode = 2
 theme_override_constants/separation = 24
 
-[node name="Title" type="Label" parent="HBox/LeftPanel/MarginContainer/VBox"]
+[node name="Title" type="Label" parent="HBox/LeftPanel/MarginContainer/VBox" unique_id=1834860581]
 layout_mode = 2
 theme_override_font_sizes/font_size = 42
-text = "RAKETINHEITIN"
+text = "Fireballistic"
 horizontal_alignment = 1
 
-[node name="Spacer" type="Control" parent="HBox/LeftPanel/MarginContainer/VBox"]
+[node name="Spacer" type="Control" parent="HBox/LeftPanel/MarginContainer/VBox" unique_id=2077109614]
 custom_minimum_size = Vector2(0, 80)
 layout_mode = 2
 
-[node name="PlayButton" type="Button" parent="HBox/LeftPanel/MarginContainer/VBox"]
+[node name="PlayButton" type="Button" parent="HBox/LeftPanel/MarginContainer/VBox" unique_id=419767912]
 layout_mode = 2
 size_flags_horizontal = 4
 text = "Play"
 
-[node name="QuitButton" type="Button" parent="HBox/LeftPanel/MarginContainer/VBox"]
+[node name="QuitButton" type="Button" parent="HBox/LeftPanel/MarginContainer/VBox" unique_id=1857825949]
 layout_mode = 2
 size_flags_horizontal = 4
 text = "Quit"
