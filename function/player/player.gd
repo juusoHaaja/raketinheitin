@@ -16,6 +16,7 @@ var dir := false
 var jump_on_cooldown = false
 
 var grappling_line_force: float = 100000.0
+var max_grappling_hooks: int = 5
 
 var _waiting_for_chunks := true
 
@@ -181,3 +182,6 @@ func boom() -> void:
 
 func pickuop() -> void:
     pickup_sfx.play_random()
+
+func get_max_grappling_hooks() -> int:
+    return max_grappling_hooks

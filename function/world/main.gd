@@ -38,8 +38,14 @@ func _unhandled_input(event: InputEvent):
             circle_tool.set_radius(circle_tool.radius - 0.5)
             print("Explosion radius: ", circle_tool.radius)
 
+        if player == null:
+            push_error("Failed to find player")
+            return
+
         if event.button_index == MOUSE_BUTTON_RIGHT:
             shoot_grappling_hook()
+            if player.line_holder.get_child_count() > player.get_max_grappling_hooks():
+                player.line_holder.get_children()[0].reel_in()
 
 func shoot_rocket():
     if projectile_scene == null:
