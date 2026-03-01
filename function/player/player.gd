@@ -4,8 +4,10 @@ class_name Player
 @onready var ground_raycast: RayCast2D = $GroundRaycast
 @onready var line_holder = $Lines
 @onready var collider = $CollisionShape2D
+@onready var health: HealthComponent = $Health
 @onready var boom_sfx: SoundEffect = $sfx/Explosions
 @onready var pickup_sfx: SoundEffect = $sfx/Pickup
+@onready var hit_sfx: SoundEffect = $sfx/Hit
 @onready var sprite = $Sprite2D
 
 var local_collisions: PackedVector2Array
@@ -21,12 +23,16 @@ var max_grappling_hooks: int = 5
 var _waiting_for_chunks := true
 
 func _ready() -> void:
+    add_to_group("player")
     freeze = true
     freeze_mode = RigidBody2D.FREEZE_MODE_STATIC
 
     add_child(jump_timer)
     jump_timer.one_shot = true
     jump_timer.connect("timeout", jump_timer_timeout)
+
+    health.died.connect(_on_health_died)
+    health.damage_taken.connect(_on_damage_taken)
 
     _wait_for_initial_chunks()
 
@@ -81,7 +87,16 @@ func jump() -> void:
 func jump_timer_timeout() -> void:
     jump_on_cooldown = false
 
-func _process(delta: float) -> void:
+
+func _on_health_died() -> void:
+    # Main scene will show game over overlay via its connection to health.died
+    pass
+
+func _on_damage_taken(_amount: float) -> void:
+    if hit_sfx:
+        hit_sfx.play_random()
+
+func _process(_delta: float) -> void:
     if wish_dir.x < 0:
         dir = true
     if wish_dir.x > 0:

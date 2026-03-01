@@ -11,7 +11,7 @@ const int FOG_SIZE = 16;
 const float LIGHT_RADIUS = 48.0;
 const float LIGHT_INNER_RADIUS = 4.0;
 const float LIGHT_FULL_BRIGHT = 2.0;
-const float EXPLORED_BRIGHTNESS = 0.55;
+const float EXPLORED_BRIGHTNESS = 1.0;  // Match player light so no flicker when moving
 const float EXPLORED_EDGE_BRIGHTNESS = 0.30;
 const int FLOOD_FILL_THRESHOLD = 4;
 

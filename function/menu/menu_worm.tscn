@@ -1,0 +1,31 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://function/menu/menu_worm.gd" id="1_worm"]
+[ext_resource type="Texture2D" uid="uid://6ii76g611t6d" path="res://icon.svg" id="2_tex"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_worm"]
+friction = 0.2
+
+[sub_resource type="CapsuleShape2D" id="CapsuleShape2D_worm"]
+radius = 35.0
+height = 120.0
+
+[node name="MenuWorm" type="RigidBody2D" groups=["player"]]
+collision_layer = 2
+collision_mask = 3
+physics_material_override = SubResource("PhysicsMaterial_worm")
+lock_rotation = true
+contact_monitor = true
+max_contacts_reported = 2
+script = ExtResource("1_worm")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+z_index = 1
+texture_filter = 1
+texture_repeat = 2
+scale = Vector2(4, 4)
+texture = ExtResource("2_tex")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+position = Vector2(4, 4)
+shape = SubResource("CapsuleShape2D_worm")

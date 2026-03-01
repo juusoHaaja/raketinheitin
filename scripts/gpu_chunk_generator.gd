@@ -84,12 +84,15 @@ func cleanup() -> void:
     if rd == null:
         return
 
-    _free_buffers()
-
+    # Free pipeline and shader only. Destroying the RenderingDevice with rd.free()
+    # releases all buffers and uniform sets; skip _free_buffers() to avoid
+    # "Attempted to free invalid ID" when the device/viewport is already torn down.
     if pipeline.is_valid():
         rd.free_rid(pipeline)
+        pipeline = RID()
     if shader.is_valid():
         rd.free_rid(shader)
+        shader = RID()
 
     rd.free()
     rd = null

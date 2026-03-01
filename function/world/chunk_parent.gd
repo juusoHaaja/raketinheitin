@@ -22,6 +22,8 @@ static var instance: ChunkParent
 
 @export var initial_sync_radius: int = 12
 @export var emergency_radius: int = 8
+## When set (e.g. by menu preview), initial terrain is generated around this world position instead of (0,0).
+@export var optional_initial_center: Vector2 = Vector2.ZERO
 
 @export var falling_materials: PackedInt32Array = PackedInt32Array([1])
 @export var fall_update_interval: float = 0.02
@@ -120,12 +122,16 @@ func _ready() -> void:
 
     _init_gpu_generator()
 
-    _force_generate_area(Vector2i.ZERO, initial_sync_radius)
+    var sync_center: Vector2i = Vector2i.ZERO
+    if optional_initial_center != Vector2.ZERO:
+        sync_center = get_chunk_pos(snap_global_to_grid(optional_initial_center))
+
+    _force_generate_area(sync_center, initial_sync_radius)
     _initial_generation_complete = true
-    
-    api_init()
-    generate_chunks_around(Vector2i.ZERO, view_radius)
-    
+
+    api_init(sync_center)
+    generate_chunks_around(sync_center, view_radius)
+
     emit_signal("initial_chunks_ready")
     call_deferred("_find_player")
 
@@ -520,6 +526,15 @@ func _process_lazy_tilemap_updates() -> void:
         _tilemap_dirty_set.erase(chunk)
         _tilemap_dirty_chunks.remove_at(i)
 
+## Flush all pending tilemap visuals immediately (e.g. for menu preview so map is fully visible at once).
+func flush_all_pending_tilemap_visuals() -> void:
+    while _tilemap_dirty_chunks.size() > 0:
+        var chunk: Chunk = _tilemap_dirty_chunks[0]
+        _tilemap_dirty_set.erase(chunk)
+        _tilemap_dirty_chunks.remove_at(0)
+        if is_instance_valid(chunk) and chunk._tilemap_dirty:
+            chunk.flush_tilemap_visuals()
+
 func _process_falling_dirt(delta: float) -> void:
     if _chunks_with_falling.is_empty():
         return
@@ -782,8 +797,8 @@ func create_room_at_world_pos(world_tile_pos: Vector2i, radius: int) -> void:
 var current_chunk: Chunk
 var current_chunk_pos: Vector2i
 
-func api_init() -> void:
-    var c: Chunk = _chunk_lookup.get(Vector2i.ZERO)
+func api_init(center_chunk: Vector2i = Vector2i.ZERO) -> void:
+    var c: Chunk = _chunk_lookup.get(center_chunk)
     if c:
         set_api_chunk(c)
 

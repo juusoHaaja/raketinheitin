@@ -33,6 +33,12 @@ var _tracked_projectiles: Array[Node2D] = []
 # Explosion flashes: { "position": Vector2, "radius": float, "intensity": float, "time_left": float }
 var _explosion_flashes: Array[Dictionary] = []
 
+# Cursor-as-flashlight (e.g. in menu): world position; use invalid to disable
+const _CURSOR_LIGHT_INVALID := Vector2(1e30, 1e30)
+var _cursor_light_pos: Vector2 = _CURSOR_LIGHT_INVALID
+const CURSOR_LIGHT_RADIUS_TILES: float = 24.0
+const CURSOR_LIGHT_INTENSITY: float = 0.9
+
 func _ready() -> void:
     _fog_system = FogTextureSystemScript.new()
 
@@ -47,10 +53,15 @@ func _ready() -> void:
             _gpu_fog_system = null
             print("[FogOfWar] GPU fog not available, using CPU")
 
-    var main = get_parent()
-    if main is Main:
-        _player = main.player
-        _chunk_parent = main.get_node_or_null("ChunkParent") as ChunkParent
+    var parent = get_parent()
+    if parent is Main:
+        _player = parent.player
+        _chunk_parent = parent.get_node_or_null("ChunkParent") as ChunkParent
+    else:
+        _chunk_parent = parent.get_node_or_null("ChunkParent") as ChunkParent
+        var players: Array[Node] = get_tree().get_nodes_in_group("player")
+        if players.size() > 0:
+            _player = players[0] as Node2D
 
 func _exit_tree() -> void:
     if _gpu_fog_system:
@@ -59,10 +70,15 @@ func _exit_tree() -> void:
 
 func _process(delta: float) -> void:
     if _player == null or _chunk_parent == null:
-        var main = get_parent()
-        if main is Main:
-            _player = main.player
-            _chunk_parent = main.get_node_or_null("ChunkParent") as ChunkParent
+        var parent = get_parent()
+        if parent is Main:
+            _player = parent.player
+            _chunk_parent = parent.get_node_or_null("ChunkParent") as ChunkParent
+        else:
+            _chunk_parent = parent.get_node_or_null("ChunkParent") as ChunkParent
+            var players: Array[Node] = get_tree().get_nodes_in_group("player")
+            if players.size() > 0:
+                _player = players[0] as Node2D
         return
 
     # Decay explosion flashes
@@ -96,18 +112,25 @@ func _process(delta: float) -> void:
     _assign_textures_to_overlays()
 
 func _update_fog_gpu() -> void:
-    var player_tile: Vector2i = _chunk_parent.snap_global_to_grid(_player.global_position)
-    var player_chunk: Vector2i = _chunk_parent.get_chunk_pos(player_tile)
     var w: int = _chunk_parent._chunk_width if _chunk_parent._chunk_width > 0 else 16
     var light_radius_tiles: float = float(FogTextureSystemScript.LIGHT_RADIUS_TILES)
 
-    # Build lights array (player + projectiles + explosions)
+    # Build lights array (player + cursor + projectiles + explosions)
     var lights: Array[Dictionary] = []
-    lights.append({
-        "tile_pos": player_tile,
-        "radius": light_radius_tiles,
-        "intensity": 1.0
-    })
+    if is_instance_valid(_player):
+        var player_tile: Vector2i = _chunk_parent.snap_global_to_grid(_player.global_position)
+        lights.append({
+            "tile_pos": player_tile,
+            "radius": light_radius_tiles,
+            "intensity": 1.0
+        })
+    if _cursor_light_pos != _CURSOR_LIGHT_INVALID:
+        var cursor_tile: Vector2i = _chunk_parent.snap_global_to_grid(_cursor_light_pos)
+        lights.append({
+            "tile_pos": cursor_tile,
+            "radius": CURSOR_LIGHT_RADIUS_TILES,
+            "intensity": CURSOR_LIGHT_INTENSITY
+        })
 
     for proj in _tracked_projectiles:
         if is_instance_valid(proj):
@@ -126,20 +149,21 @@ func _update_fog_gpu() -> void:
             "intensity": flash["intensity"]
         })
 
-    # Chunks that need visibility update (player light + extra lights)
-    var light_chunks: int = int(ceil(light_radius_tiles / float(w))) + 1
-    var min_cx: int = player_chunk.x - light_chunks
-    var max_cx: int = player_chunk.x + light_chunks
-    var min_cy: int = player_chunk.y - light_chunks
-    var max_cy: int = player_chunk.y + light_chunks
-
-    for light in lights:
-        var lc: Vector2i = _chunk_parent.get_chunk_pos(light["tile_pos"])
-        var lr: int = int(ceil(light["radius"] / float(w))) + 1
-        min_cx = mini(min_cx, lc.x - lr)
-        max_cx = maxi(max_cx, lc.x + lr)
-        min_cy = mini(min_cy, lc.y - lr)
-        max_cy = maxi(max_cy, lc.y + lr)
+    # Chunks that need visibility update (player + cursor + extra lights)
+    var min_cx: int = 0x7FFFFFFF
+    var max_cx: int = -0x7FFFFFFF
+    var min_cy: int = 0x7FFFFFFF
+    var max_cy: int = -0x7FFFFFFF
+    if lights.is_empty():
+        pass
+    else:
+        for light in lights:
+            var lc: Vector2i = _chunk_parent.get_chunk_pos(light["tile_pos"])
+            var lr: int = int(ceil(light["radius"] / float(w))) + 1
+            min_cx = mini(min_cx, lc.x - lr)
+            max_cx = maxi(max_cx, lc.x + lr)
+            min_cy = mini(min_cy, lc.y - lr)
+            max_cy = maxi(max_cy, lc.y + lr)
 
     var chunks_to_update: Array[Vector2i] = []
     for cx in range(min_cx, max_cx + 1):
@@ -155,6 +179,10 @@ func _update_fog_gpu() -> void:
 func _update_fog_cpu() -> void:
     _fog_system.clear_extra_lights()
 
+    if _cursor_light_pos != _CURSOR_LIGHT_INVALID:
+        var cursor_tile: Vector2i = _chunk_parent.snap_global_to_grid(_cursor_light_pos)
+        _fog_system.add_extra_light(cursor_tile, CURSOR_LIGHT_RADIUS_TILES, CURSOR_LIGHT_INTENSITY)
+
     for proj in _tracked_projectiles:
         if is_instance_valid(proj):
             var proj_tile: Vector2i = _chunk_parent.snap_global_to_grid(proj.global_position)
@@ -164,15 +192,21 @@ func _update_fog_cpu() -> void:
         var flash_tile: Vector2i = _chunk_parent.snap_global_to_grid(flash["position"])
         _fog_system.add_extra_light(flash_tile, flash["radius"], flash["intensity"])
 
-    var player_tile: Vector2i = _chunk_parent.snap_global_to_grid(_player.global_position)
-    var player_chunk: Vector2i = _chunk_parent.get_chunk_pos(player_tile)
+    var center_tile: Vector2i
+    if is_instance_valid(_player):
+        center_tile = _chunk_parent.snap_global_to_grid(_player.global_position)
+    elif _cursor_light_pos != _CURSOR_LIGHT_INVALID:
+        center_tile = _chunk_parent.snap_global_to_grid(_cursor_light_pos)
+    else:
+        center_tile = Vector2i.ZERO
+    var center_chunk: Vector2i = _chunk_parent.get_chunk_pos(center_tile)
     var w: int = _chunk_parent._chunk_width if _chunk_parent._chunk_width > 0 else 16
 
     var light_chunks: int = int(ceil(FogTextureSystemScript.LIGHT_RADIUS_TILES / float(w))) + 1
-    var min_cx: int = player_chunk.x - light_chunks
-    var max_cx: int = player_chunk.x + light_chunks
-    var min_cy: int = player_chunk.y - light_chunks
-    var max_cy: int = player_chunk.y + light_chunks
+    var min_cx: int = center_chunk.x - light_chunks
+    var max_cx: int = center_chunk.x + light_chunks
+    var min_cy: int = center_chunk.y - light_chunks
+    var max_cy: int = center_chunk.y + light_chunks
 
     for light in _fog_system.get_extra_lights():
         var lc: Vector2i = _chunk_parent.get_chunk_pos(light["tile_pos"])
@@ -188,12 +222,12 @@ func _update_fog_cpu() -> void:
             var ch: Chunk = _chunk_parent.get_chunk_if_exists(cpos)
             if not ch or not ch.generation_complete:
                 continue
-            var local_tx: int = player_tile.x - cx * w
-            var local_ty: int = player_tile.y - cy * w
+            var local_tx: int = center_tile.x - cx * w
+            var local_ty: int = center_tile.y - cy * w
             _fog_system.update_fog(cpos, local_tx, local_ty, ch.map_width, ch.map_height)
 
-    for cx in range(player_chunk.x - VIEW_CHUNK_RADIUS, player_chunk.x + VIEW_CHUNK_RADIUS + 1):
-        for cy in range(player_chunk.y - VIEW_CHUNK_RADIUS, player_chunk.y + VIEW_CHUNK_RADIUS + 1):
+    for cx in range(center_chunk.x - VIEW_CHUNK_RADIUS, center_chunk.x + VIEW_CHUNK_RADIUS + 1):
+        for cy in range(center_chunk.y - VIEW_CHUNK_RADIUS, center_chunk.y + VIEW_CHUNK_RADIUS + 1):
             var cpos := Vector2i(cx, cy)
             var ch: Chunk = _chunk_parent.get_chunk_if_exists(cpos)
             if not ch:
@@ -269,3 +303,11 @@ func add_explosion_flash(world_pos: Vector2, radius: float = -1.0, duration: flo
         "intensity": EXPLOSION_LIGHT_INTENSITY,
         "time_left": duration,
     })
+
+## Set cursor world position for flashlight effect (e.g. in menu). Call each frame when over the view.
+func set_cursor_light_position(world_pos: Vector2) -> void:
+    _cursor_light_pos = world_pos
+
+## Disable cursor flashlight (e.g. when cursor leaves the preview area).
+func clear_cursor_light() -> void:
+    _cursor_light_pos = _CURSOR_LIGHT_INVALID

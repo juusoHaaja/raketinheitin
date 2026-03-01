@@ -1,0 +1,13 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://function/menu/menu_preview.gd" id="1_preview"]
+[ext_resource type="PackedScene" uid="uid://mbw4ot8ba0xc" path="res://function/world/chunk_parent.tscn" id="2_chunks"]
+
+[node name="MenuPreview" type="Node2D"]
+script = ExtResource("1_preview")
+
+[node name="ChunkParent" parent="." instance=ExtResource("2_chunks")]
+optional_initial_center = Vector2(400, 300)
+
+[node name="Camera2D" type="Camera2D" parent="."]
+position = Vector2(400, 300)
