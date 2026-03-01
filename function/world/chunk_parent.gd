@@ -66,6 +66,14 @@ var _max_pool_size: int = 32
 # Lazy TileMap updates: chunks with deferred visual flushes
 var _tilemap_dirty_chunks: Array[Chunk] = []
 var _tilemap_dirty_set: Dictionary = {}  # chunk -> true for O(1) membership
+@export var max_dirty_tiles_per_frame: int = 0  # 0 = no limit; caps total set_cell/erase_cell per frame
+
+# Chunk lookup cache: avoid repeated dict lookups for same (cx, cy) during smoothing / world queries
+const _CHUNK_CACHE_SIZE: int = 8
+var _chunk_cache_cx: PackedInt32Array = PackedInt32Array()
+var _chunk_cache_cy: PackedInt32Array = PackedInt32Array()
+var _chunk_cache_chunks: Array[Chunk] = []
+var _chunk_cache_next: int = 0
 
 # Precomputed values
 var _emergency_radius_sq: int = 0
@@ -97,6 +105,13 @@ func _ready() -> void:
     _particle_container = Node2D.new()
     _particle_container.name = "FallingParticles"
     add_child(_particle_container)
+
+    _chunk_cache_cx.resize(_CHUNK_CACHE_SIZE)
+    _chunk_cache_cy.resize(_CHUNK_CACHE_SIZE)
+    _chunk_cache_chunks.resize(_CHUNK_CACHE_SIZE)
+    for i in _CHUNK_CACHE_SIZE:
+        _chunk_cache_cx[i] = 0x7FFFFFFF  # invalid sentinel
+        _chunk_cache_chunks[i] = null
 
     # Generate first chunk on CPU to get dimensions, then init GPU
     var initial_chunk: Chunk = _force_generate_immediate_cpu(Vector2i.ZERO)
@@ -397,6 +412,21 @@ func _get_material_at_coords(wx: int, wy: int) -> int:
 func is_solid_at_world_pos(world_pos: Vector2i) -> bool:
     return _is_solid_at_coords(world_pos.x, world_pos.y)
 
+# Cached chunk lookup to avoid repeated dict + Vector2i for same (cx, cy)
+func _get_chunk_cached(cx: int, cy: int) -> Chunk:
+    var i: int = 0
+    while i < _CHUNK_CACHE_SIZE:
+        if _chunk_cache_cx[i] == cx and _chunk_cache_cy[i] == cy:
+            return _chunk_cache_chunks[i]
+        i += 1
+    var chunk: Chunk = _chunk_lookup.get(Vector2i(cx, cy))
+    var slot: int = _chunk_cache_next % _CHUNK_CACHE_SIZE
+    _chunk_cache_next += 1
+    _chunk_cache_cx[slot] = cx
+    _chunk_cache_cy[slot] = cy
+    _chunk_cache_chunks[slot] = chunk
+    return chunk
+
 # Fast version used internally
 func _is_solid_at_coords(wx: int, wy: int) -> bool:
     var w: int = _chunk_width if _chunk_width > 0 else 16
@@ -406,7 +436,7 @@ func _is_solid_at_coords(wx: int, wy: int) -> bool:
     @warning_ignore("integer_division")
     var cy: int = wy / w if wy >= 0 else (wy - w + 1) / w
     
-    var chunk: Chunk = _chunk_lookup.get(Vector2i(cx, cy))
+    var chunk: Chunk = _get_chunk_cached(cx, cy)
     if chunk and chunk.generation_complete:
         var lx: int = wx - cx * w
         var ly: int = wy - cy * w
@@ -472,15 +502,20 @@ func _register_chunk_for_tilemap_flush(chunk: Chunk) -> void:
 func _process_lazy_tilemap_updates() -> void:
     var flushed: int = 0
     var max_flush: int = max_tilemap_flushes_per_frame
+    var tiles_updated: int = 0
+    var max_tiles: int = max_dirty_tiles_per_frame
     var i: int = 0
     while i < _tilemap_dirty_chunks.size() and flushed < max_flush:
+        if max_tiles > 0 and tiles_updated >= max_tiles:
+            break
         var chunk: Chunk = _tilemap_dirty_chunks[i]
         if not is_instance_valid(chunk):
             _tilemap_dirty_chunks.remove_at(i)
             _tilemap_dirty_set.erase(chunk)
             continue
         if chunk._tilemap_dirty:
-            chunk.flush_tilemap_visuals()
+            var count: int = chunk.flush_tilemap_visuals()
+            tiles_updated += count
             flushed += 1
         _tilemap_dirty_set.erase(chunk)
         _tilemap_dirty_chunks.remove_at(i)

@@ -62,6 +62,7 @@ var _fall_dirty_neighbor_list: Array[Chunk] = []
 # Dirty column tracking: only process columns that were modified for fall simulation
 var _dirty_columns: int = 0  # Bitmask for chunks up to 64 wide
 var _dirty_columns_array: PackedByteArray = PackedByteArray()  # For wider chunks
+var _dirty_columns_list: PackedInt32Array = PackedInt32Array()  # List of dirty column indices for fast iteration
 
 # Island detection for converting small isolated falling blocks to particles
 var _island_check_visited: PackedByteArray = PackedByteArray()
@@ -276,12 +277,25 @@ func destroy_tiles_batch(positions: Array) -> void:
 
     end_batch_update()
 
-    if any_changed and chunk_parent:
-        chunk_parent._register_chunk_for_fall_update(self)
-        var above: Chunk = chunk_parent._chunk_lookup.get(chunk_pos + Vector2i(0, -1))
-        if above:
-            above.needs_fall_update = true
-            chunk_parent._register_chunk_for_fall_update(above)
+    if any_changed:
+        check_isolated_islands_all_materials()
+        if chunk_parent:
+            # Also check neighboring chunks - they may have lost support or gained floating islands
+            var neighbors: Array[Vector2i] = [
+                chunk_pos + Vector2i(0, -1),
+                chunk_pos + Vector2i(0, 1),
+                chunk_pos + Vector2i(-1, 0),
+                chunk_pos + Vector2i(1, 0)
+            ]
+            for npos in neighbors:
+                var neighbor: Chunk = chunk_parent._chunk_lookup.get(npos)
+                if neighbor and neighbor.generation_complete:
+                    neighbor.check_isolated_islands_all_materials()
+            chunk_parent._register_chunk_for_fall_update(self)
+            var above: Chunk = chunk_parent._chunk_lookup.get(chunk_pos + Vector2i(0, -1))
+            if above:
+                above.needs_fall_update = true
+                chunk_parent._register_chunk_for_fall_update(above)
 
 func begin_batch_update() -> void:
     _batch_mode = true
@@ -319,13 +333,20 @@ func update_cells() -> void:
     _dirty_tile_indices.clear()
     _tilemap_dirty = false
 
-func flush_tilemap_visuals() -> void:
+## Flushes deferred tile visuals; returns number of tile updates (set_cell/erase_cell) performed.
+func flush_tilemap_visuals() -> int:
     if not _tilemap_dirty:
-        return
+        return 0
     var dirty_count: int = _dirty_tile_indices.size()
     if dirty_count >= _DIRTY_FULL_REBUILD_THRESHOLD:
         update_cells()
-        return
+        var solid_count: int = 0
+        for i in _map_size:
+            if cells[i] != 0:
+                solid_count += 1
+        _dirty_tile_indices.clear()
+        _tilemap_dirty = false
+        return solid_count
     var w: int = map_width
     var px: int
     var py: int
@@ -333,6 +354,7 @@ func flush_tilemap_visuals() -> void:
     var ti: int
     var idx: int
     var prev_idx: int = -1
+    var updated: int = 0
     _dirty_tile_indices.sort()
     for i in _dirty_tile_indices.size():
         idx = _dirty_tile_indices[i]
@@ -349,8 +371,10 @@ func flush_tilemap_visuals() -> void:
         else:
             ti = (val - 1) % tileset_count
             set_cell(Vector2i(px, py), 0, _tileset_coords_cache[ti], 0)
+        updated += 1
     _dirty_tile_indices.clear()
     _tilemap_dirty = false
+    return updated
 
 func gen_init(pos: Vector2i) -> void:
     chunk_pos = pos
@@ -438,6 +462,7 @@ func _initialize_cave_map() -> void:
         y += 1
 
 func _smooth_map() -> void:
+    _ensure_neighbor_cache()
     var offset_x: int = _chunk_world_offset_x
     var offset_y: int = _chunk_world_offset_y
     var w: int = map_width
@@ -477,6 +502,20 @@ func _smooth_map() -> void:
     _temp_solid = _smooth_buffer
     _smooth_buffer = tmp
 
+# Returns neighbor cell value (0 = air) or -1 if no neighbor; use during smoothing to avoid ChunkParent lookups
+func _get_neighbor_cell_out_of_bounds(nx: int, ny: int, w: int, h: int) -> int:
+    var dx: int = -1 if nx < 0 else (1 if nx >= w else 0)
+    var dy: int = -1 if ny < 0 else (1 if ny >= h else 0)
+    if dx == 0 and dy == 0:
+        return -1
+    var cache_idx: int = (dy + 1) * 3 + (dx + 1)
+    var neighbor: Chunk = _neighbor_cache[cache_idx]
+    if not neighbor or not neighbor.generation_complete:
+        return -1
+    var nbr_lx: int = (nx + w) % w
+    var nbr_ly: int = (ny + h) % h
+    return neighbor.cells[nbr_lx + nbr_ly * w]
+
 func _count_neighbors_fast(x: int, y: int, wx: int, wy: int, w: int, h: int) -> int:
     var count: int = 0
     var ny: int
@@ -492,8 +531,13 @@ func _count_neighbors_fast(x: int, y: int, wx: int, wy: int, w: int, h: int) -> 
             nx = x + dx
             if nx >= 0 and nx < w and ny >= 0 and ny < h:
                 count += _temp_solid[nx + ny * w]
-            elif chunk_parent._is_solid_at_coords(wx + dx, wy + dy):
-                count += 1
+            else:
+                var nbr_val: int = _get_neighbor_cell_out_of_bounds(nx, ny, w, h)
+                if nbr_val >= 0:
+                    count += 1 if nbr_val != 0 else 0
+                elif chunk_parent:
+                    if chunk_parent._is_solid_at_coords(wx + dx, wy + dy):
+                        count += 1
             dx += 1
         dy += 1
     return count
@@ -533,8 +577,12 @@ func _get_dominant_neighbor_material(x: int, y: int, wx: int, wy: int, w: int, h
                 if _temp_solid[ni] != 0:
                     val = _temp_material[ni]
             else:
-                if chunk_parent._is_solid_at_coords(nwx, nwy):
-                    val = chunk_parent._get_material_at_coords(nwx, nwy)
+                var nbr_val: int = _get_neighbor_cell_out_of_bounds(nx, ny, w, h)
+                if nbr_val >= 0:
+                    val = nbr_val
+                elif chunk_parent:
+                    if chunk_parent._is_solid_at_coords(nwx, nwy):
+                        val = chunk_parent._get_material_at_coords(nwx, nwy)
 
             if val > 0 and val < 16:
                 _material_counts[val] += 1
@@ -771,6 +819,13 @@ func update_falling_materials(_falling_mats_unused: Array[int], fall_speed: int 
     
     needs_fall_update = _fall_dirty
 
+func _build_dirty_columns_list() -> void:
+    _dirty_columns_list.clear()
+    var w: int = map_width
+    for x in w:
+        if is_column_dirty(x):
+            _dirty_columns_list.append(x)
+
 func update_falling_materials_optimized(_falling_mats: Array[int], fall_speed: int = 1, diagonal: bool = false) -> void:
     if _dirty_columns == 0 and not _has_any_dirty_columns():
         if not needs_fall_update:
@@ -778,6 +833,10 @@ func update_falling_materials_optimized(_falling_mats: Array[int], fall_speed: i
         # needs_fall_update set without dirty columns (e.g. create_room); mark all columns for one run
         for x in map_width:
             mark_column_dirty(x)
+
+    _build_dirty_columns_list()
+    if _dirty_columns_list.is_empty():
+        return
 
     _fall_dirty = false
     _ensure_neighbor_cache()
@@ -793,10 +852,8 @@ func update_falling_materials_optimized(_falling_mats: Array[int], fall_speed: i
         var moved_this_step: bool = false
 
         for y in range(h - 1, -1, -1):
-            for x in w:
-                if not is_column_dirty(x):
-                    continue
-
+            for col_idx in _dirty_columns_list.size():
+                var x: int = _dirty_columns_list[col_idx]
                 var idx: int = x + y * w
                 var current_mat: int = cells[idx]
 
@@ -830,15 +887,14 @@ func update_falling_materials_optimized(_falling_mats: Array[int], fall_speed: i
             break
         _fall_dirty = true
 
-    if _fall_dirty:
-        _check_for_isolated_islands()
+    # Check for isolated islands when falling materials moved (can expose new islands)
+    check_isolated_islands_all_materials()
 
     if _fall_dirty and chunk_parent:
         var above_chunk: Chunk = chunk_parent._chunk_lookup.get(chunk_pos + Vector2i(0, -1))
         if above_chunk and above_chunk.generation_complete:
-            for x in w:
-                if is_column_dirty(x):
-                    above_chunk.mark_column_dirty(x)
+            for col_idx in _dirty_columns_list.size():
+                above_chunk.mark_column_dirty(_dirty_columns_list[col_idx])
             above_chunk.needs_fall_update = true
             chunk_parent._register_chunk_for_fall_update(above_chunk)
         chunk_parent._register_chunk_for_fall_update(self)
@@ -854,68 +910,169 @@ func update_falling_materials_optimized(_falling_mats: Array[int], fall_speed: i
 
     needs_fall_update = _fall_dirty
 
-func _check_for_isolated_islands() -> void:
+## Check for isolated islands of ANY solid material that should become particles.
+## Called after terrain modifications (explosions, mining, etc.) and during fall updates.
+func check_isolated_islands_all_materials() -> void:
     if not chunk_parent or not chunk_parent.particle_scene:
         return
-    var lookup_size: int = _falling_lookup.size()
+
+    _ensure_neighbor_cache()
     var w: int = map_width
     var h: int = map_height
     _island_check_visited.fill(0)
-    for y in h:
+
+    # Process from bottom to top so we catch cascading collapses
+    for y in range(h - 1, -1, -1):
         for x in w:
-            if not is_column_dirty(x):
-                continue
             var idx: int = x + y * w
             if _island_check_visited[idx] != 0:
                 continue
             var mat: int = cells[idx]
-            if mat == 0 or mat >= lookup_size or _falling_lookup[mat] == 0:
+            if mat == 0:
                 continue
-            var wx: int = _chunk_world_offset_x + x
-            var wy: int = _chunk_world_offset_y + y
-            var below: int = _get_world_cell_cached(wx, wy + 1)
-            if below != 0:
-                continue
+
             _island_positions.clear()
-            var island_size: int = _flood_fill_island(x, y, mat)
-            if island_size >= chunk_parent.min_island_size_for_particles and island_size <= chunk_parent.max_island_size_for_particles:
+            var island_size: int = _flood_fill_island_check_support(x, y)
+
+            # island_size returns -1 if supported, otherwise the count
+            if island_size > 0 and island_size >= chunk_parent.min_island_size_for_particles and island_size <= chunk_parent.max_island_size_for_particles:
                 _convert_island_to_particles()
 
-func _flood_fill_island(start_x: int, start_y: int, target_mat: int) -> int:
+## Flood fill that finds connected solid cells and checks if island is supported.
+## Returns -1 if island is supported (connected to ground or larger mass).
+## Returns positive count if island is unsupported and small enough to fall.
+func _flood_fill_island_check_support(start_x: int, start_y: int) -> int:
     var w: int = map_width
     var h: int = map_height
-    var queue: Array[Vector2i] = [Vector2i(start_x, start_y)]
+    var max_size: int = chunk_parent.max_island_size_for_particles + 1 if chunk_parent else 17
+    var queue_cap: int = maxi(max_size * 8, 128)
+
+    var queue_x: PackedInt32Array = PackedInt32Array()
+    var queue_y: PackedInt32Array = PackedInt32Array()
+    queue_x.resize(queue_cap)
+    queue_y.resize(queue_cap)
+    var queue_start: int = 0
+    var queue_end: int = 0
+
+    queue_x[queue_end] = start_x
+    queue_y[queue_end] = start_y
+    queue_end += 1
+
     var count: int = 0
-    var max_count: int = chunk_parent.max_island_size_for_particles + 1 if chunk_parent else 999
-    while queue.size() > 0 and count <= max_count:
-        var pos: Vector2i = queue.pop_back()
-        var idx: int = pos.x + pos.y * w
-        if pos.x < 0 or pos.x >= w or pos.y < 0 or pos.y >= h:
+    var is_supported: bool = false
+
+    _island_positions.clear()
+
+    while queue_start < queue_end and count <= max_size:
+        var px: int = queue_x[queue_start]
+        var py: int = queue_y[queue_start]
+        queue_start += 1
+
+        # Bounds check for local coords
+        if px < 0 or px >= w or py < 0 or py >= h:
+            # Check cross-chunk - if there's solid there, we're supported
+            var wx: int = _chunk_world_offset_x + px
+            var wy: int = _chunk_world_offset_y + py
+            var cross_val: int = _get_world_cell_cached(wx, wy)
+            if cross_val > 0:
+                is_supported = true
             continue
+
+        var idx: int = px + py * w
         if _island_check_visited[idx] != 0:
             continue
-        if cells[idx] != target_mat:
+
+        var mat: int = cells[idx]
+        if mat == 0:
             continue
+
         _island_check_visited[idx] = 1
-        _island_positions.append(pos)
+        _island_positions.append(Vector2i(px, py))
         count += 1
-        queue.append(Vector2i(pos.x + 1, pos.y))
-        queue.append(Vector2i(pos.x - 1, pos.y))
-        queue.append(Vector2i(pos.x, pos.y + 1))
-        queue.append(Vector2i(pos.x, pos.y - 1))
+
+        # If we've exceeded max size, this island is too big to fall
+        if count > max_size:
+            return -1
+
+        # Add 4 neighbors to queue (if queue full, treat as too big - don't partially convert)
+        if queue_end + 4 >= queue_x.size():
+            return -1
+        queue_x[queue_end] = px + 1
+        queue_y[queue_end] = py
+        queue_end += 1
+
+        queue_x[queue_end] = px - 1
+        queue_y[queue_end] = py
+        queue_end += 1
+
+        queue_x[queue_end] = px
+        queue_y[queue_end] = py + 1
+        queue_end += 1
+
+        queue_x[queue_end] = px
+        queue_y[queue_end] = py - 1
+        queue_end += 1
+
+    # Now check if island has any support from below (outside the island)
+    if not is_supported:
+        for local_pos in _island_positions:
+            var wx: int = _chunk_world_offset_x + local_pos.x
+            var wy: int = _chunk_world_offset_y + local_pos.y + 1  # Check BELOW
+            var below_val: int = _get_world_cell_cached(wx, wy)
+
+            if below_val > 0:
+                # Check if this below cell is part of our island
+                var below_in_island: bool = false
+                var below_local: Vector2i = Vector2i(local_pos.x, local_pos.y + 1)
+                for ipos in _island_positions:
+                    if ipos == below_local:
+                        below_in_island = true
+                        break
+
+                if not below_in_island:
+                    # Supported by something outside the island
+                    is_supported = true
+                    break
+
+    if is_supported:
+        return -1
+
     return count
 
+## Convert current island positions to falling particles
 func _convert_island_to_particles() -> void:
     if _island_positions.is_empty():
         return
+    if not chunk_parent:
+        return
+
     var w: int = map_width
-    var mat_type: int = cells[_island_positions[0].x + _island_positions[0].y * w]
+    var any_converted: bool = false
+
     for local_pos in _island_positions:
         var idx: int = local_pos.x + local_pos.y * w
+        var mat_type: int = cells[idx]
+        if mat_type == 0:
+            continue
+
         cells[idx] = 0
         set_tileset_tile_xy(local_pos.x, local_pos.y, 0)
-        var world_pos: Vector2i = Vector2i(_chunk_world_offset_x + local_pos.x, _chunk_world_offset_y + local_pos.y)
+
+        var world_pos: Vector2i = Vector2i(
+            _chunk_world_offset_x + local_pos.x,
+            _chunk_world_offset_y + local_pos.y
+        )
         chunk_parent.spawn_falling_particle(world_pos, mat_type)
+
+        mark_column_dirty(local_pos.x)
+        any_converted = true
+
+    if any_converted:
+        _fall_dirty = true
+        needs_fall_update = true
+        if chunk_parent:
+            chunk_parent._register_chunk_for_fall_update(self)
+
     _island_positions.clear()
 
 func _try_diagonal_fall_optimized(wx: int, wy: int, local_x: int, local_y: int, idx: int, mat_type: int) -> bool:
@@ -1008,6 +1165,7 @@ func create_room(center: Vector2i, radius: int) -> void:
     end_batch_update()
     for col in range(col_min, col_max + 1):
         mark_column_dirty(col)
+    check_isolated_islands_all_materials()
     needs_fall_update = true
     if chunk_parent:
         chunk_parent._register_chunk_for_fall_update(self)
@@ -1020,6 +1178,7 @@ func reset_for_reuse() -> void:
     _dirty_columns = 0
     if _dirty_columns_array.size() > 0:
         _dirty_columns_array.fill(0)
+    _dirty_columns_list.clear()
     cells.clear()
     _pending_tile_positions.clear()
     _pending_tile_values.clear()
