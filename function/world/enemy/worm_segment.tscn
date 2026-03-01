@@ -1,31 +1,28 @@
-[gd_scene format=3 uid="uid://worm_segment_001"]
+[gd_scene format=3 uid="uid://q3do8v0nt2k"]
 
 [ext_resource type="Texture2D" uid="uid://f5w566e08ptn" path="res://art/worm/body.png" id="1_tex"]
-[ext_resource type="PackedScene" uid="uid://c3healthcomp01" path="res://function/components/health.tscn" id="2_health"]
-[ext_resource type="Script" path="res://function/components/health_bar.gd" id="3_healthbar"]
+[ext_resource type="PackedScene" uid="uid://dpleghfa4rpto" path="res://function/components/health.tscn" id="2_health"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_seg"]
-radius = 14.0
+radius = 50.159744
 
-[node name="WormSegment" type="Node2D"]
+[node name="WormSegment" type="Node2D" unique_id=804567521]
 
-[node name="Sprite2D" type="Sprite2D" parent="."]
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1234157616]
+rotation = 1.5708
 scale = Vector2(6, 6)
 texture = ExtResource("1_tex")
-rotation = 1.5708
 
-[node name="Health" parent="." instance=ExtResource("2_health")]
+[node name="Health" parent="." unique_id=207668527 instance=ExtResource("2_health")]
 max_health = 30.0
 
-[node name="HealthBar" type="Node2D" parent="." script=ExtResource("3_healthbar")]
+[node name="HealthBar" type="Node2D" parent="." unique_id=1740314578]
 z_index = -1
 position = Vector2(0, -22)
-bar_width = 28.0
-bar_height = 2.0
 
-[node name="Collision" type="StaticBody2D" parent="."]
+[node name="Collision" type="StaticBody2D" parent="." unique_id=1766583692]
 collision_layer = 8
 collision_mask = 0
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Collision"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Collision" unique_id=903711206]
 shape = SubResource("CircleShape2D_seg")
