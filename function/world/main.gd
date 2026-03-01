@@ -86,6 +86,7 @@ func _process(delta: float) -> void:
     _update_worm_health_bar()
     _update_progressive_spawn(delta)
     _update_worm_segment_bars()
+    _update_worm_ui_labels()
     # Show grappling hook reminder after 10s if player hasn't used right click
     if not _grappling_hook_used and not _grappling_reminder_shown and grappling_reminder_label:
         _grappling_reminder_timer += delta
@@ -192,6 +193,17 @@ func _on_player_damage_dealt(amount: float) -> void:
 func _update_score_display() -> void:
     if score_label:
         score_label.text = "Score: %d | Best: %d" % [_score, GameState.highscore]
+
+func _update_worm_ui_labels() -> void:
+    if worm_count_label:
+        worm_count_label.text = "Worms: %d" % _worms.size()
+    if next_worm_label:
+        if not player or not player.health or not player.health.is_alive():
+            next_worm_label.visible = false
+        else:
+            next_worm_label.visible = true
+            var remaining := _spawn_interval - _next_worm_spawn_timer
+            next_worm_label.text = "Next worm in %ds" % maxi(0, floori(remaining))
 
 func _update_progressive_spawn(delta: float) -> void:
     if not player or not player.health or not player.health.is_alive():
