@@ -20,6 +20,9 @@ var jump_on_cooldown = false
 var grappling_line_force: float = 100000.0
 var max_grappling_hooks: int = 5
 
+## Passive health regeneration per second (only when below max)
+@export var health_regen_per_second: float = 3.0
+
 var _waiting_for_chunks := true
 
 func _ready() -> void:
@@ -96,12 +99,16 @@ func _on_damage_taken(_amount: float) -> void:
     if hit_sfx:
         hit_sfx.play_random()
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
     if wish_dir.x < 0:
         dir = true
     if wish_dir.x > 0:
         dir = false
     sprite.flip_h = dir
+
+    # Passive regeneration when below max health
+    if health and health.current_health < health.max_health:
+        health.heal(health_regen_per_second * delta)
 
 var wish_dir = Vector2.ZERO
 

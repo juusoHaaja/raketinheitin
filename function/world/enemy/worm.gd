@@ -70,7 +70,7 @@ func _ready() -> void:
     health.damage_taken.connect(_on_damage_taken)
     head.target_node = target_node
     head.move_speed = head_move_speed
-    head.z_index = -1
+    head.z_index = 0
     damage_zone.body_entered.connect(_on_damage_zone_body_entered)
     if ChunkParent.instance:
         _charge_break_tool = CircleTool.new(charge_break_radius)
@@ -79,7 +79,7 @@ func _ready() -> void:
     for c in segment_parent.get_children():
         if c is Node2D:
             var seg: Node2D = c as Node2D
-            seg.z_index = -1
+            seg.z_index = 0
             segments.append(seg)
             var seg_health: HealthComponent = seg.get_node_or_null("Health") as HealthComponent
             if seg_health:
