@@ -13,7 +13,7 @@ const float LIGHT_INNER_RADIUS = 4.0;
 const float LIGHT_FULL_BRIGHT = 2.0;
 const float EXPLORED_BRIGHTNESS = 1.0;  // Match player light so no flicker when moving
 const float EXPLORED_EDGE_BRIGHTNESS = 0.30;
-const int FLOOD_FILL_THRESHOLD = 4;
+const int FLOOD_FILL_THRESHOLD = 2;  // 2 allows corridors; 4 was too strict
 
 // ============================================
 // BUFFERS

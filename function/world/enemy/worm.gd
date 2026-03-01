@@ -22,13 +22,13 @@ enum Move {
 @export var damage_cooldown: float = 1.0
 
 ## Charge attack: runs at player, breaks cells, extra damage
-@export var charge_probability: float = 0.30
-@export var charge_speed: float = 2200.0
-@export var charge_duration_min: float = 0.6
-@export var charge_duration_max: float = 1.2
+@export var charge_probability: float = 0.45
+@export var charge_speed: float = 2600.0
+@export var charge_duration_min: float = 0.5
+@export var charge_duration_max: float = 1.0
 @export var charge_damage: float = 28.0
 @export var charge_break_radius: float = 6.5
-@export var head_move_speed: float = 1000.0
+@export var head_move_speed: float = 1200.0
 
 var _damage_cooldown_timer: float = 0.0
 var _charge_direction: Vector2 = Vector2.RIGHT
@@ -38,17 +38,17 @@ var _charge_break_tool: CircleTool
 
 ## AI: orbit around this target (e.g. player). If null, head follows mouse (editor/test).
 var player_target: Node2D = null
-@export var orbit_radius: float = 280.0
-@export var orbit_speed: float = 0.6  ## Radians per second
+@export var orbit_radius: float = 220.0
+@export var orbit_speed: float = 0.9  ## Radians per second
 @export var orbit_wobble: float = 0.15  ## Radius variation (0 = perfect circle)
 @export var orbit_wobble_speed: float = 2.0
-@export var move_duration_min: float = 1.0
-@export var move_duration_max: float = 2.8
-@export var lunge_radius_ratio: float = 0.45  ## How close during lunge (more aggressive)
-@export var retreat_radius_ratio: float = 1.3
-@export var strafe_speed: float = 1.6  ## Faster strafing
-@export var close_range_threshold: float = 180.0  ## Prefer lunge when player within this distance
-@export var stationary_charge_bonus: float = 0.25  ## Extra charge chance when player barely moving
+@export var move_duration_min: float = 0.6
+@export var move_duration_max: float = 1.8
+@export var lunge_radius_ratio: float = 0.35  ## How close during lunge (more aggressive)
+@export var retreat_radius_ratio: float = 1.1
+@export var strafe_speed: float = 2.2  ## Faster strafing
+@export var close_range_threshold: float = 260.0  ## Prefer lunge when player within this distance
+@export var stationary_charge_bonus: float = 0.35  ## Extra charge chance when player barely moving
 
 var _orbit_angle: float = 0.0
 var _current_move: Move = Move.ORBIT
@@ -62,8 +62,6 @@ var segments: Array[Node2D] = []
 var _path: Array = []
 var _path_length: float = 0.0
 var _last_path_pos: Vector2 = Vector2.INF
-var _last_segment_mode: bool = false
-var _last_segment_ref: Node2D = null
 
 func _ready() -> void:
     health.died.connect(_on_died)
@@ -84,41 +82,37 @@ func _ready() -> void:
             var seg_health: HealthComponent = seg.get_node_or_null("Health") as HealthComponent
             if seg_health:
                 seg_health.died.connect(_on_segment_died.bind(seg))
+                seg_health.health_changed.connect(_on_segment_health_changed)
+    _sync_head_health()
     _orbit_angle = randf() * TAU
     _pick_next_move()
 
 func _on_segment_died(seg: Node2D) -> void:
+    var seg_health: HealthComponent = seg.get_node_or_null("Health") as HealthComponent
+    if seg_health:
+        seg_health.health_changed.disconnect(_on_segment_health_changed)
     segments.erase(seg)
     seg.queue_free()
-
-func _enter_last_segment_mode() -> void:
-    _last_segment_mode = true
     if segments.is_empty():
-        return
-    _last_segment_ref = segments[0]
-    var seg_health: HealthComponent = _last_segment_ref.get_node_or_null("Health") as HealthComponent
-    if not seg_health:
-        return
-    var combined_max: float = health.max_health + seg_health.max_health
-    var combined_current: float = health.current_health + seg_health.current_health
-    health.max_health = combined_max
-    health.current_health = combined_current
-    seg_health.current_health = seg_health.max_health
-    seg_health.damage_taken.connect(_on_last_segment_damage_taken)
+        health.take_damage(health.max_health)
+    else:
+        _sync_head_health()
 
-func _on_last_segment_damage_taken(amount: float) -> void:
-    health.take_damage(amount)
-    if is_instance_valid(_last_segment_ref):
-        var seg_health: HealthComponent = _last_segment_ref.get_node_or_null("Health") as HealthComponent
+func _on_segment_health_changed(_current: float, _maximum: float) -> void:
+    _sync_head_health()
+
+func _sync_head_health() -> void:
+    var total_max: float = 0.0
+    var total_current: float = 0.0
+    for seg in segments:
+        if not is_instance_valid(seg):
+            continue
+        var seg_health: HealthComponent = seg.get_node_or_null("Health") as HealthComponent
         if seg_health:
-            call_deferred("_heal_last_segment", amount)
-
-func _heal_last_segment(amount: float) -> void:
-    if not is_instance_valid(_last_segment_ref):
-        return
-    var seg_health: HealthComponent = _last_segment_ref.get_node_or_null("Health") as HealthComponent
-    if seg_health:
-        seg_health.heal(amount)
+            total_max += seg_health.max_health
+            total_current += seg_health.current_health
+    health.max_health = total_max
+    health.current_health = total_current
 
 func set_player_target(p: Node2D) -> void:
     player_target = p
@@ -129,18 +123,17 @@ func _on_died() -> void:
 func _on_damage_taken(amount: float) -> void:
     if hit_sfx and hit_sfx.stream:
         hit_sfx.play()
-    # Distribute head damage equally across head + all segments (skip when merged with last segment)
-    if segments.is_empty() or _last_segment_mode:
+    # Head has no separate health; distribute damage to all segments
+    if segments.is_empty():
         return
-    var total_parts: int = segments.size() + 1
-    var per_part: float = amount / float(total_parts)
-    health.heal(amount - per_part)
+    health.heal(amount)
+    var per_seg: float = amount / float(segments.size())
     for seg in segments.duplicate():
         if not is_instance_valid(seg):
             continue
         var seg_health: HealthComponent = seg.get_node_or_null("Health") as HealthComponent
         if seg_health:
-            seg_health.take_damage(per_part)
+            seg_health.take_damage(per_seg)
 
 func _process(delta: float) -> void:
     if _damage_cooldown_timer > 0.0:
@@ -183,9 +176,9 @@ func _pick_next_move() -> void:
         charge_roll += stationary_charge_bonus
     var candidates: Array[Move]
     if dist_to_player > 0.0 and dist_to_player < close_range_threshold:
-        candidates = [Move.LUNGE, Move.LUNGE, Move.STRAFE, Move.ORBIT, Move.LUNGE, Move.STRAFE]
+        candidates = [Move.LUNGE, Move.LUNGE, Move.LUNGE, Move.STRAFE, Move.ORBIT, Move.STRAFE]
     else:
-        candidates = [Move.ORBIT, Move.ORBIT, Move.LUNGE, Move.RETREAT, Move.STRAFE, Move.PAUSE]
+        candidates = [Move.ORBIT, Move.LUNGE, Move.LUNGE, Move.STRAFE, Move.STRAFE]
     if randf() < charge_roll and is_instance_valid(player_target):
         _current_move = Move.CHARGE
         _charge_direction = (player_target.global_position - head.global_position).normalized()
@@ -293,8 +286,6 @@ func _update_segments_from_path(delta: float) -> void:
         s.global_rotation = lerp_angle(s.global_rotation, target_angle, blend)
 
 func _physics_process(delta: float) -> void:
-    if segments.size() == 1 and not _last_segment_mode:
-        _enter_last_segment_mode()
     if health_bar:
         health_bar.position = head.position + Vector2(0, -50)
 

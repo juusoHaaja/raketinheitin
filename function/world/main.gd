@@ -97,36 +97,8 @@ func _process(delta: float) -> void:
             grappling_reminder_label.visible = true
 
 func _update_worm_health_bar() -> void:
-    if not is_instance_valid(_worm):
-        worm_health_bar.visible = false
-        return
-    var head: Node2D = _worm.get_node_or_null("Head")
-    var worm_health_node: Node = _worm.get_node_or_null("Health")
-    if not head or not worm_health_node:
-        worm_health_bar.visible = false
-        return
-    var worm_health: HealthComponent = worm_health_node as HealthComponent
-    if not worm_health:
-        worm_health_bar.visible = false
-        return
-    var segments_parent: Node = _worm.get_node_or_null("Segments")
-    var segs: Array[Node] = segments_parent.get_children() if segments_parent else []
-    var total_max: float = worm_health.max_health
-    var total_current: float = worm_health.current_health
-    if segs.size() > 1:
-        for seg in segs:
-            var sh: HealthComponent = (seg as Node).get_node_or_null("Health") as HealthComponent
-            if sh:
-                total_max += sh.max_health
-                total_current += sh.current_health
-    else:
-        total_max = worm_health.max_health
-        total_current = worm_health.current_health
-    var world_pos: Vector2 = head.global_position + Vector2(0, -50)
-    worm_health_bar.position = world_pos - Vector2(worm_health_bar.size.x * 0.5, 20.0)
-    worm_health_bar.max_value = total_max
-    worm_health_bar.value = total_current
-    worm_health_bar.visible = true
+    # Each worm has its own WormHealthBar; hide the legacy single-worm bar
+    worm_health_bar.visible = false
 
 func _ensure_worm_segment_bars(count: int) -> void:
     while _worm_segment_bars.size() < count:
@@ -140,32 +112,9 @@ func _ensure_worm_segment_bars(count: int) -> void:
         _worm_segment_bars.append(bar)
 
 func _update_worm_segment_bars() -> void:
+    # Each worm segment has its own HealthBar; hide legacy segment bars
     for b in _worm_segment_bars:
         b.visible = false
-    if not is_instance_valid(_worm):
-        return
-    var segments_parent: Node = _worm.get_node_or_null("Segments")
-    if not segments_parent:
-        return
-    var segs: Array[Node] = segments_parent.get_children()
-    if segs.size() <= 1:
-        return
-    _ensure_worm_segment_bars(segs.size())
-    for i in range(segs.size()):
-        var seg: Node2D = segs[i] as Node2D
-        if not is_instance_valid(seg):
-            continue
-        var health_node: Node = seg.get_node_or_null("Health")
-        var seg_health: HealthComponent = health_node as HealthComponent
-        if not seg_health:
-            continue
-        var bar: ProgressBar = _worm_segment_bars[i]
-        var world_pos: Vector2 = seg.global_position + Vector2(0, -25)
-        bar.position = world_pos - Vector2(WORM_SEGMENT_BAR_SIZE.x * 0.5, 10.0)
-        bar.max_value = seg_health.max_health
-        bar.value = seg_health.current_health
-        bar.visible = true
-
 func _on_player_health_changed(_current: float, _maximum: float) -> void:
     _update_player_health_bar()
 

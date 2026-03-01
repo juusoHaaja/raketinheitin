@@ -18,10 +18,10 @@ rotation = 1.5708
 max_health = 30.0
 
 [node name="HealthBar" type="Node2D" parent="." script=ExtResource("3_healthbar")]
-z_index = -1
+z_index = 12
 position = Vector2(0, -22)
-bar_width = 28.0
-bar_height = 2.0
+bar_width = 36.0
+bar_height = 4.0
 
 [node name="Collision" type="StaticBody2D" parent="."]
 collision_layer = 8

@@ -5,7 +5,7 @@ const FogTextureSystemScript = preload("res://function/world/lighting/fog_textur
 const GPUFogSystemScript = preload("res://scripts/gpu_fog_system.gd")
 
 const VIEW_CHUNK_RADIUS := 16
-const _UPDATE_INTERVAL := 0.06
+const _UPDATE_INTERVAL := 0.1
 
 # Projectile light settings
 const PROJECTILE_LIGHT_RADIUS := 12.0
@@ -179,10 +179,9 @@ func _update_fog_gpu() -> void:
     var chunks_to_update: Array[Vector2i] = []
     for cx in range(min_cx, max_cx + 1):
         for cy in range(min_cy, max_cy + 1):
-            var cpos := Vector2i(cx, cy)
-            var ch: Chunk = _chunk_parent.get_chunk_if_exists(cpos)
+            var ch: Chunk = _chunk_parent.get_chunk_at(cx, cy)
             if ch and ch.generation_complete:
-                chunks_to_update.append(cpos)
+                chunks_to_update.append(Vector2i(cx, cy))
 
     if not chunks_to_update.is_empty():
         _gpu_fog_system.update_fog_batch(chunks_to_update, lights)
@@ -229,21 +228,14 @@ func _update_fog_cpu() -> void:
 
     for cx in range(min_cx, max_cx + 1):
         for cy in range(min_cy, max_cy + 1):
-            var cpos := Vector2i(cx, cy)
-            var ch: Chunk = _chunk_parent.get_chunk_if_exists(cpos)
+            var ch: Chunk = _chunk_parent.get_chunk_at(cx, cy)
             if not ch or not ch.generation_complete:
                 continue
+            var cpos := Vector2i(cx, cy)
             var local_tx: int = center_tile.x - cx * w
             var local_ty: int = center_tile.y - cy * w
             _fog_system.update_fog(cpos, local_tx, local_ty, ch.map_width, ch.map_height)
-
-    for cx in range(center_chunk.x - VIEW_CHUNK_RADIUS, center_chunk.x + VIEW_CHUNK_RADIUS + 1):
-        for cy in range(center_chunk.y - VIEW_CHUNK_RADIUS, center_chunk.y + VIEW_CHUNK_RADIUS + 1):
-            var cpos := Vector2i(cx, cy)
-            var ch: Chunk = _chunk_parent.get_chunk_if_exists(cpos)
-            if not ch:
-                continue
-            _fog_system.get_or_create_fog(cpos, ch.map_width, ch.map_height)
+    # get_or_create_fog is done in _assign_cpu_textures for visible chunks; no redundant loop
 
 func _assign_textures_to_overlays() -> void:
     _textures_dirty = false
@@ -257,33 +249,46 @@ func _assign_textures_to_overlays() -> void:
     else:
         _assign_cpu_textures()
 
+func _get_center_chunk() -> Vector2i:
+    if is_instance_valid(_player):
+        return _chunk_parent.get_chunk_pos(_chunk_parent.snap_global_to_grid(_player.global_position))
+    if _cursor_light_pos != _CURSOR_LIGHT_INVALID:
+        return _chunk_parent.get_chunk_pos(_chunk_parent.snap_global_to_grid(_cursor_light_pos))
+    return Vector2i.ZERO
+
 func _assign_gpu_textures() -> void:
-    for ch in _chunk_parent.get_chunks():
-        if not is_instance_valid(ch):
-            continue
-        _gpu_fog_system.get_or_create_chunk(ch.chunk_pos)
-        ch.create_fog_overlay_if_needed()
-        var tex: ImageTexture = _gpu_fog_system.get_texture(ch.chunk_pos)
-        if tex:
-            if ch.fog_overlay.texture != tex:
-                ch.fog_overlay.texture = tex
-            ch.fog_overlay.visible = true
-        else:
-            ch.fog_overlay.visible = false
+    var center_chunk := _get_center_chunk()
+    for cx in range(center_chunk.x - VIEW_CHUNK_RADIUS, center_chunk.x + VIEW_CHUNK_RADIUS + 1):
+        for cy in range(center_chunk.y - VIEW_CHUNK_RADIUS, center_chunk.y + VIEW_CHUNK_RADIUS + 1):
+            var ch: Chunk = _chunk_parent.get_chunk_at(cx, cy)
+            if not ch or not is_instance_valid(ch):
+                continue
+            _gpu_fog_system.get_or_create_chunk(ch.chunk_pos)
+            ch.create_fog_overlay_if_needed()
+            var tex: ImageTexture = _gpu_fog_system.get_texture(ch.chunk_pos)
+            if tex:
+                if ch.fog_overlay.texture != tex:
+                    ch.fog_overlay.texture = tex
+                ch.fog_overlay.visible = true
+            else:
+                ch.fog_overlay.visible = false
 
 func _assign_cpu_textures() -> void:
-    for ch in _chunk_parent.get_chunks():
-        if not is_instance_valid(ch):
-            continue
-        _fog_system.get_or_create_fog(ch.chunk_pos, ch.map_width, ch.map_height)
-        ch.create_fog_overlay_if_needed()
-        var tex: ImageTexture = _fog_system.get_texture(ch.chunk_pos) as ImageTexture
-        if tex:
-            if ch.fog_overlay.texture != tex:
-                ch.fog_overlay.texture = tex
-            ch.fog_overlay.visible = true
-        else:
-            ch.fog_overlay.visible = false
+    var center_chunk := _get_center_chunk()
+    for cx in range(center_chunk.x - VIEW_CHUNK_RADIUS, center_chunk.x + VIEW_CHUNK_RADIUS + 1):
+        for cy in range(center_chunk.y - VIEW_CHUNK_RADIUS, center_chunk.y + VIEW_CHUNK_RADIUS + 1):
+            var ch: Chunk = _chunk_parent.get_chunk_at(cx, cy)
+            if not ch or not is_instance_valid(ch):
+                continue
+            _fog_system.get_or_create_fog(ch.chunk_pos, ch.map_width, ch.map_height)
+            ch.create_fog_overlay_if_needed()
+            var tex: ImageTexture = _fog_system.get_texture(ch.chunk_pos) as ImageTexture
+            if tex:
+                if ch.fog_overlay.texture != tex:
+                    ch.fog_overlay.texture = tex
+                ch.fog_overlay.visible = true
+            else:
+                ch.fog_overlay.visible = false
 
 func _hide_all_fog_overlays() -> void:
     for ch in _chunk_parent.get_chunks():

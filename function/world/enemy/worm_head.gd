@@ -2,8 +2,8 @@ extends Node2D
 class_name WormHead
 
 @export var move_speed: float = 1000.0
-@export var turn_speed: float = 4.0  ## Radians per second toward target
-@export var acceleration: float = 8.0  ## How quickly velocity catches up (higher = snappier)
+@export var turn_speed: float = 5.5  ## Radians per second toward target
+@export var acceleration: float = 10.0  ## How quickly velocity catches up (higher = snappier)
 @export var min_speed_ratio: float = 0.15  ## Keep crawling even when facing away
 
 var target_node: Node2D

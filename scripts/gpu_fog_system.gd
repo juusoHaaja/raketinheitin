@@ -4,7 +4,7 @@ extends RefCounted
 const FOG_SIZE: int = 16
 const MAX_CHUNKS_PER_BATCH: int = 256
 const MAX_LIGHTS: int = 64
-const FLOOD_FILL_ITERATIONS: int = 4
+const FLOOD_FILL_ITERATIONS: int = 8
 const BLUR_ITERATIONS: int = 3
 
 var rd: RenderingDevice
@@ -313,16 +313,11 @@ func _read_results(num_chunks: int) -> void:
         for j in range(pixels_per_chunk):
             chunk_explored[j] = explored_bytes.decode_float((buf_offset + j) * 4)
 
-        # Update image from RGBA output (packed as AABBGGRR in uint32)
+        # Bulk update image from RGBA output (shader writes R,G,B,A per pixel; set_data avoids set_pixel loop)
         var img: Image = data.image
-        for y in range(FOG_SIZE):
-            for x in range(FOG_SIZE):
-                var px_idx: int = buf_offset + y * FOG_SIZE + x
-                var rgba: int = output_bytes.decode_u32(px_idx * 4)
-                var r: float = float(rgba & 0xFF) / 255.0
-                var g: float = float((rgba >> 8) & 0xFF) / 255.0
-                var b: float = float((rgba >> 16) & 0xFF) / 255.0
-                img.set_pixel(x, y, Color(r, g, b, 1.0))
+        var byte_offset: int = buf_offset * 4
+        var chunk_bytes: PackedByteArray = output_bytes.slice(byte_offset, byte_offset + pixels_per_chunk * 4)
+        img.set_data(FOG_SIZE, FOG_SIZE, false, Image.FORMAT_RGBA8, chunk_bytes)
 
         # Update texture
         var tex: ImageTexture = data.texture
