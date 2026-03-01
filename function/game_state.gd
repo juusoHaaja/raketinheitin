@@ -10,7 +10,7 @@ const KEY_PERFORMANCE_MODE := "performance_mode"
 var highscore: int = 0
 
 ## Performance mode: when true, fog of war is disabled for better performance.
-var performance_mode: bool = false
+var performance_mode: bool = true
 
 func _ready() -> void:
 	load_highscore()
@@ -36,9 +36,9 @@ func load_settings() -> void:
 	var cfg := ConfigFile.new()
 	var err := cfg.load(SETTINGS_PATH)
 	if err == OK:
-		performance_mode = cfg.get_value("settings", KEY_PERFORMANCE_MODE, false)
+		performance_mode = cfg.get_value("settings", KEY_PERFORMANCE_MODE, true)
 	else:
-		performance_mode = false
+		performance_mode = true
 
 func save_settings() -> void:
 	var cfg := ConfigFile.new()
