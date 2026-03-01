@@ -168,7 +168,7 @@ func _find_player() -> void:
 
 func _setup_noise() -> void:
     cave_noise = FastNoiseLite.new()
-    cave_noise.seed = world_seed
+    cave_noise.seed = 69420
     cave_noise.noise_type = FastNoiseLite.TYPE_SIMPLEX_SMOOTH
     cave_noise.frequency = 0.01
     cave_noise.fractal_octaves = 4

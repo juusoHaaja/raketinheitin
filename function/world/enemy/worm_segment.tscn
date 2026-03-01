@@ -18,7 +18,7 @@ rotation = 1.5708
 max_health = 30.0
 
 [node name="HealthBar" type="Node2D" parent="." script=ExtResource("3_healthbar")]
-z_index = 15
+z_index = -1
 position = Vector2(0, -22)
 bar_width = 28.0
 bar_height = 2.0

@@ -3,6 +3,7 @@ extends Area2D
 class_name Projectile
 
 signal exploded
+signal damage_dealt(amount: float)
 
 @export var speed: float = 700.0
 @export var explosion_radius: float = 4.0
@@ -35,6 +36,7 @@ func explode():
         var health_node = _find_health_component(_hit_body)
         if health_node != null:
             health_node.take_damage(damage)
+            damage_dealt.emit(damage)
         _hit_body = null
 
     emit_signal("exploded")
