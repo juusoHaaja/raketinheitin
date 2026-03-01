@@ -16,14 +16,22 @@ var circle_tool: CircleTool
 @onready var fog_of_war: Node2D = $FogOfWar
 @onready var ui_layer: CanvasLayer = $UI
 @onready var player_health_bar: ProgressBar = $UI/PlayerHealthBar
-@onready var worm_health_bar: ProgressBar = $UI/WormHealthBar
-@onready var worm_segment_bars_container: Control = $UI/WormSegmentBars
+@onready var worm_health_bar: ProgressBar = $WormBarLayer/WormHealthBar
+@onready var worm_segment_bars_container: Control = $WormBarLayer/WormSegmentBars
 @onready var game_over_layer: Control = $UI/GameOverLayer
 @onready var restart_button: Button = $UI/GameOverLayer/VBox/RestartButton
+@onready var grappling_reminder_label: Label = $UI/GrapplingReminderLabel
 
 var _worm: Node2D = null
+var _grappling_hook_used: bool = false
+var _grappling_reminder_timer: float = 0.0
+var _grappling_reminder_shown: bool = false
 var _worm_segment_bars: Array[ProgressBar] = []
 const WORM_SEGMENT_BAR_SIZE: Vector2 = Vector2(40, 3)
+
+## Firing cooldown so player cannot spam rockets
+const FIRE_COOLDOWN: float = 0.4
+var _fire_cooldown_timer: float = 0.0
 
 func _enter_tree() -> void:
     instance = self
@@ -42,6 +50,8 @@ func _ready():
         _update_player_health_bar()
 
     game_over_layer.visible = false
+    if grappling_reminder_label:
+        grappling_reminder_label.visible = false
     # Keep UI processing when game is paused so Restart button works
     ui_layer.process_mode = Node.PROCESS_MODE_ALWAYS
     if restart_button:
@@ -49,9 +59,17 @@ func _ready():
 
     _spawn_worm()
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
+    if _fire_cooldown_timer > 0.0:
+        _fire_cooldown_timer -= delta
     _update_worm_health_bar()
     _update_worm_segment_bars()
+    # Show grappling hook reminder after 10s if player hasn't used right click
+    if not _grappling_hook_used and not _grappling_reminder_shown and grappling_reminder_label:
+        _grappling_reminder_timer += delta
+        if _grappling_reminder_timer >= 10.0:
+            _grappling_reminder_shown = true
+            grappling_reminder_label.visible = true
 
 func _update_worm_health_bar() -> void:
     if not is_instance_valid(_worm):
@@ -156,7 +174,9 @@ func _spawn_worm() -> void:
 func _unhandled_input(event: InputEvent):
     if event is InputEventMouseButton and event.pressed:
         if event.button_index == MOUSE_BUTTON_LEFT:
-            shoot_rocket()
+            if _fire_cooldown_timer <= 0.0:
+                shoot_rocket()
+                _fire_cooldown_timer = FIRE_COOLDOWN
 
         # Scroll to change explosion size
         if event.button_index == MOUSE_BUTTON_WHEEL_UP:
@@ -171,11 +191,14 @@ func _unhandled_input(event: InputEvent):
             return
 
         if event.button_index == MOUSE_BUTTON_RIGHT:
+            _grappling_hook_used = true
+            if grappling_reminder_label:
+                grappling_reminder_label.visible = false
             shoot_grappling_hook()
             if player.line_holder.get_child_count() > player.get_max_grappling_hooks():
                 player.line_holder.get_children()[0].reel_in()
 
-func shoot_rocket():
+func shoot_rocket() -> void:
     if projectile_scene == null:
         push_error("Assign projectile scene in inspector!")
         return

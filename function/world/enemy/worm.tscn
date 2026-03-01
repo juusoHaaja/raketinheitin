@@ -16,10 +16,11 @@ radius = 28.0
 radius = 36.0
 
 [node name="Worm" type="Node2D" unique_id=627508341]
+z_index = -1
 script = ExtResource("1_30phe")
 
 [node name="HealthBar" type="Node2D" parent="." script=ExtResource("5_healthbar")]
-z_index = 5
+z_index = -1
 bar_width = 60.0
 bar_height = 6.0
 

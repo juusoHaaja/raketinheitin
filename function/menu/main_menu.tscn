@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://function/menu/main_menu.gd" id="1_menu"]
+[ext_resource type="PackedScene" path="res://function/menu/menu_preview.tscn" id="2_preview"]
 
 [node name="MainMenu" type="Control"]
 layout_mode = 3
@@ -55,3 +56,17 @@ text = "Play"
 layout_mode = 2
 size_flags_horizontal = 4
 text = "Quit"
+
+[node name="MapPreviewPanel" type="PanelContainer" parent="HBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="SubViewportContainer" type="SubViewportContainer" parent="HBox/MapPreviewPanel"]
+layout_mode = 2
+stretch = true
+
+[node name="SubViewport" type="SubViewport" parent="HBox/MapPreviewPanel/SubViewportContainer"]
+size = Vector2i(640, 360)
+handle_input_locally = false
+
+[node name="MenuPreview" parent="HBox/MapPreviewPanel/SubViewportContainer/SubViewport" instance=ExtResource("2_preview")]

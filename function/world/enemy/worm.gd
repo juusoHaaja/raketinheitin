@@ -21,13 +21,13 @@ enum Move {
 @export var contact_damage: float = 10.0
 @export var damage_cooldown: float = 1.0
 
-## Charge attack: rare, runs at player, breaks cells, extra damage
-@export var charge_probability: float = 0.12
+## Charge attack: runs at player, breaks cells, extra damage
+@export var charge_probability: float = 0.30
 @export var charge_speed: float = 2200.0
 @export var charge_duration_min: float = 0.6
 @export var charge_duration_max: float = 1.2
 @export var charge_damage: float = 28.0
-@export var charge_break_radius: float = 2.5
+@export var charge_break_radius: float = 6.5
 @export var head_move_speed: float = 1000.0
 
 var _damage_cooldown_timer: float = 0.0
@@ -42,11 +42,13 @@ var player_target: Node2D = null
 @export var orbit_speed: float = 0.6  ## Radians per second
 @export var orbit_wobble: float = 0.15  ## Radius variation (0 = perfect circle)
 @export var orbit_wobble_speed: float = 2.0
-@export var move_duration_min: float = 1.5
-@export var move_duration_max: float = 3.5
-@export var lunge_radius_ratio: float = 0.5  ## How close during lunge (0.5 = half orbit radius)
-@export var retreat_radius_ratio: float = 1.4  ## How far during retreat
-@export var strafe_speed: float = 1.2  ## Radians per second when strafing
+@export var move_duration_min: float = 1.0
+@export var move_duration_max: float = 2.8
+@export var lunge_radius_ratio: float = 0.45  ## How close during lunge (more aggressive)
+@export var retreat_radius_ratio: float = 1.3
+@export var strafe_speed: float = 1.6  ## Faster strafing
+@export var close_range_threshold: float = 180.0  ## Prefer lunge when player within this distance
+@export var stationary_charge_bonus: float = 0.25  ## Extra charge chance when player barely moving
 
 var _orbit_angle: float = 0.0
 var _current_move: Move = Move.ORBIT
@@ -68,6 +70,7 @@ func _ready() -> void:
 	health.damage_taken.connect(_on_damage_taken)
 	head.target_node = target_node
 	head.move_speed = head_move_speed
+	head.z_index = -1
 	damage_zone.body_entered.connect(_on_damage_zone_body_entered)
 	if ChunkParent.instance:
 		_charge_break_tool = CircleTool.new(charge_break_radius)
@@ -76,6 +79,7 @@ func _ready() -> void:
 	for c in segment_parent.get_children():
 		if c is Node2D:
 			var seg: Node2D = c as Node2D
+			seg.z_index = -1
 			segments.append(seg)
 			var seg_health: HealthComponent = seg.get_node_or_null("Health") as HealthComponent
 			if seg_health:
@@ -170,8 +174,19 @@ func _find_health(node: Node) -> HealthComponent:
 func _pick_next_move() -> void:
 	if _current_move == Move.CHARGE:
 		head.move_speed = head_move_speed
-	var candidates: Array[Move] = [Move.ORBIT, Move.ORBIT, Move.LUNGE, Move.RETREAT, Move.STRAFE, Move.PAUSE]
-	if randf() < charge_probability and is_instance_valid(player_target):
+	var dist_to_player: float = 0.0
+	if is_instance_valid(player_target):
+		dist_to_player = head.global_position.distance_to(player_target.global_position)
+	# When player is close, charge more often and prefer aggressive moves (lunge/strafe over pause/retreat)
+	var charge_roll: float = charge_probability
+	if dist_to_player > 0.0 and dist_to_player < close_range_threshold:
+		charge_roll += stationary_charge_bonus
+	var candidates: Array[Move]
+	if dist_to_player > 0.0 and dist_to_player < close_range_threshold:
+		candidates = [Move.LUNGE, Move.LUNGE, Move.STRAFE, Move.ORBIT, Move.LUNGE, Move.STRAFE]
+	else:
+		candidates = [Move.ORBIT, Move.ORBIT, Move.LUNGE, Move.RETREAT, Move.STRAFE, Move.PAUSE]
+	if randf() < charge_roll and is_instance_valid(player_target):
 		_current_move = Move.CHARGE
 		_charge_direction = (player_target.global_position - head.global_position).normalized()
 		if _charge_direction.length_squared() < 0.01:
