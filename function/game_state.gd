@@ -32,13 +32,19 @@ func save_highscore(value: int) -> void:
 	cfg.set_value("game", KEY_HIGHSCORE, highscore)
 	cfg.save(SAVE_PATH)
 
+## Returns true when running in a web browser (for performance tuning).
+static func is_web() -> bool:
+	return OS.get_name() == "Web"
+
 func load_settings() -> void:
 	var cfg := ConfigFile.new()
 	var err := cfg.load(SETTINGS_PATH)
+	# On web, default to performance mode for better FPS
+	var default_perf := is_web()
 	if err == OK:
-		performance_mode = cfg.get_value("settings", KEY_PERFORMANCE_MODE, true)
+		performance_mode = cfg.get_value("settings", KEY_PERFORMANCE_MODE, default_perf)
 	else:
-		performance_mode = true
+		performance_mode = default_perf
 
 func save_settings() -> void:
 	var cfg := ConfigFile.new()

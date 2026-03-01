@@ -6,8 +6,10 @@ static var instance: DestructionManager
 
 # Debris settings
 const MAX_ACTIVE_DEBRIS := 300
+const MAX_ACTIVE_DEBRIS_WEB := 120
 const BASE_DEBRIS_PER_TILE := 2
 const BASE_MAX_DEBRIS := 40
+const BASE_MAX_DEBRIS_WEB := 20
 const BASE_EXPLOSION_RADIUS := 4.0  # Reference radius for scaling
 
 # Active debris tracking
@@ -208,7 +210,8 @@ func _spawn_debris(pos: Vector2, destroyed_tiles: Array[Dictionary], radius: flo
     var tile_size := _get_tile_size()
     var radius_scale := radius / (BASE_EXPLOSION_RADIUS * tile_size)
     var scaled_debris_per_tile := ceili(BASE_DEBRIS_PER_TILE * radius_scale)
-    var scaled_max_debris := ceili(BASE_MAX_DEBRIS * radius_scale)
+    var base_max := BASE_MAX_DEBRIS_WEB if GameState.is_web() else BASE_MAX_DEBRIS
+    var scaled_max_debris := ceili(base_max * radius_scale)
     
     var debris_count := mini(destroyed_tiles.size() * scaled_debris_per_tile, scaled_max_debris)
     
@@ -219,7 +222,8 @@ func _spawn_debris(pos: Vector2, destroyed_tiles: Array[Dictionary], radius: flo
             valid_debris.append(d)
     _active_debris = valid_debris
     
-    while _active_debris.size() + debris_count > MAX_ACTIVE_DEBRIS and _active_debris.size() > 0:
+    var max_debris := MAX_ACTIVE_DEBRIS_WEB if GameState.is_web() else MAX_ACTIVE_DEBRIS
+    while _active_debris.size() + debris_count > max_debris and _active_debris.size() > 0:
         var old: Node2D = _active_debris.pop_front()
         if is_instance_valid(old):
             old.queue_free()

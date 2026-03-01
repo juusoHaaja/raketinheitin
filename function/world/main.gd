@@ -45,11 +45,11 @@ const SCORE_PER_DAMAGE: float = 1.0
 const SCORE_PER_WORM_KILL: int = 100
 var _score: int = 0
 
-## Progressive worm spawning
+## Progressive worm spawning: difficulty = more worms over time
 const INITIAL_WORM_COUNT: int = 1
-const SPAWN_INTERVAL_START: float = 45.0  ## Seconds until 2nd worm
-const SPAWN_INTERVAL_DECAY: float = 0.92  ## Each spawn shortens next interval (e.g. 45, 41, 38...)
-const SPAWN_INTERVAL_MIN: float = 12.0
+const SPAWN_INTERVAL_START: float = 40.0  ## Seconds until 2nd worm
+const SPAWN_INTERVAL_DECAY: float = 0.88  ## Each spawn shortens next interval (ramps faster)
+const SPAWN_INTERVAL_MIN: float = 8.0  ## Min interval at peak (~15 min)
 var _next_worm_spawn_timer: float = 0.0
 var _spawn_interval: float = SPAWN_INTERVAL_START
 
