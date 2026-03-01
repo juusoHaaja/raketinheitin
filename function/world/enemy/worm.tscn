@@ -66,3 +66,5 @@ position = Vector2(0, 1)
 [node name="Segment4" parent="Segments" instance=ExtResource("7_segment")]
 
 [node name="TargetNode" type="Node2D" parent="." unique_id=987264291]
+
+[node name="Line2D" type="Line2D" parent="." unique_id=453641372]
