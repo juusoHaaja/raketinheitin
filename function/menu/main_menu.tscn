@@ -51,10 +51,63 @@ layout_mode = 2
 size_flags_horizontal = 4
 text = "Play"
 
+[node name="SettingsButton" type="Button" parent="HBox/LeftPanel/MarginContainer/VBox"]
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Settings"
+
 [node name="QuitButton" type="Button" parent="HBox/LeftPanel/MarginContainer/VBox" unique_id=1857825949]
 layout_mode = 2
 size_flags_horizontal = 4
 text = "Quit"
+
+[node name="SettingsPopup" type="PopupPanel" parent="."]
+size = Vector2i(280, 140)
+
+[node name="MarginContainer" type="MarginContainer" parent="SettingsPopup"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="VBox" type="VBoxContainer" parent="SettingsPopup/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Title" type="Label" parent="SettingsPopup/MarginContainer/VBox"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "Settings"
+horizontal_alignment = 1
+
+[node name="PerformanceRow" type="HBoxContainer" parent="SettingsPopup/MarginContainer/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Label" type="Label" parent="SettingsPopup/MarginContainer/VBox/PerformanceRow"]
+layout_mode = 2
+size_flags_vertical = 1
+theme_override_font_sizes/font_size = 16
+text = "Performance:"
+
+[node name="OptionButton" type="OptionButton" parent="SettingsPopup/MarginContainer/VBox/PerformanceRow"]
+layout_mode = 2
+size_flags_horizontal = 3
+item_count = 2
+selected = 0
+popup/item_0/text = "Off"
+popup/item_1/text = "On"
+
+[node name="CloseButton" type="Button" parent="SettingsPopup/MarginContainer/VBox"]
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Close"
 
 [node name="MapPreviewPanel" type="PanelContainer" parent="HBox"]
 layout_mode = 2

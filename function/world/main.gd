@@ -56,6 +56,8 @@ func _enter_tree() -> void:
     instance = self
 
 func _ready():
+    if fog_of_war != null:
+        fog_of_war.fog_enabled = not GameState.performance_mode
     if DestructionManager.instance == null:
         var dm = DestructionManager.new()
         dm.name = "DestructionManager"
