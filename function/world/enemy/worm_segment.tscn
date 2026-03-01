@@ -15,7 +15,7 @@ scale = Vector2(6, 6)
 texture = ExtResource("1_tex")
 
 [node name="Health" parent="." unique_id=207668527 instance=ExtResource("2_health")]
-max_health = 25.0
+max_health = 50.0
 
 [node name="HealthBar" type="Node2D" parent="." unique_id=1740314578]
 z_index = 5

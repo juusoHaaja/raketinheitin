@@ -104,6 +104,13 @@ func _ready() -> void:
     _setup_noise()
     _setup_falling_materials()
 
+    # Web: lower chunk generation throughput to avoid frame hitches
+    if GameState.is_web():
+        max_chunks_per_frame = 2
+        max_chunks_per_frame_urgent = 6
+        gpu_chunks_per_frame = 3
+        max_tilemap_flushes_per_frame = 4
+
     _particle_container = Node2D.new()
     _particle_container.name = "FallingParticles"
     add_child(_particle_container)
