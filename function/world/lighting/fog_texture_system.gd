@@ -23,10 +23,11 @@ const EXPLORED_BRIGHTNESS := 1.0
 # How bright the falloff edge of explored areas gets
 const EXPLORED_EDGE_BRIGHTNESS := 0.30
 # Number of blur passes for explored-area edge falloff
-const EXPLORED_FALLOFF_TILES := 3
+const EXPLORED_FALLOFF_TILES := 2
 
 # Flood-fill: how many neighbor tiles must be explored to auto-discover a tile
-const FLOOD_FILL_NEIGHBOR_THRESHOLD := 4  # out of 8 neighbors
+# 2 allows 1-tile corridors and faster propagation; 4 was too strict
+const FLOOD_FILL_NEIGHBOR_THRESHOLD := 2  # out of 8 neighbors
 
 # chunk_pos Vector2i -> Dictionary { "image", "texture", "explored", "visible" }
 var _chunk_fog: Dictionary = {}
@@ -38,11 +39,17 @@ var _light_stamp_size: int
 # -- Extra lights (projectiles, explosions, etc.) --
 var _extra_lights: Array[Dictionary] = []
 
-# Reusable scratch buffer for falloff computation (avoids alloc each frame)
+# Reusable scratch buffers for falloff computation (ping-pong, avoids duplicate() per frame)
 var _falloff_scratch: PackedFloat32Array
+var _falloff_scratch_2: PackedFloat32Array
 
 # Reusable byte buffer for image composition (RGBA, 4 bytes per pixel)
 var _compose_bytes: PackedByteArray
+
+# Precomputed smootherstep falloff LUT: index = int((d2/radius_sq) * (LUT_SIZE-1)) -> falloff value [0,1]
+# Avoids sqrt per pixel in extra-light stamping
+const _EXTRA_LIGHT_LUT_SIZE := 256
+var _extra_light_falloff_lut: PackedFloat32Array
 
 func clear_extra_lights() -> void:
     _extra_lights.clear()
@@ -59,9 +66,12 @@ func get_extra_lights() -> Array[Dictionary]:
 
 func _init() -> void:
     _create_light_stamp()
-    # Pre-allocate scratch buffers
+    _create_extra_light_falloff_lut()
+    # Pre-allocate scratch buffers (ping-pong for blur passes)
     _falloff_scratch = PackedFloat32Array()
     _falloff_scratch.resize(FOG_PIXEL_COUNT)
+    _falloff_scratch_2 = PackedFloat32Array()
+    _falloff_scratch_2.resize(FOG_PIXEL_COUNT)
     _compose_bytes = PackedByteArray()
     _compose_bytes.resize(FOG_PIXEL_COUNT * 4)
 
@@ -102,6 +112,17 @@ func _create_light_stamp() -> void:
                     t = t * t * t * (t * (t * 6.0 - 15.0) + 10.0)  # smootherstep inline
                     value = lerpf(0.92, 0.0, t)
             _light_stamp[row + x] = value
+
+func _create_extra_light_falloff_lut() -> void:
+    # smootherstep(sqrt(u)) for u in [0,1]; index i = u * (LUT_SIZE-1)
+    _extra_light_falloff_lut = PackedFloat32Array()
+    _extra_light_falloff_lut.resize(_EXTRA_LIGHT_LUT_SIZE)
+    for i in _EXTRA_LIGHT_LUT_SIZE:
+        var u := float(i) / float(_EXTRA_LIGHT_LUT_SIZE - 1)
+        var t := sqrt(u)
+        t = clampf(t, 0.0, 1.0)
+        t = t * t * t * (t * (t * 6.0 - 15.0) + 10.0)
+        _extra_light_falloff_lut[i] = t
 
 # -- Create / access fog data --
 
@@ -184,26 +205,25 @@ func update_fog(chunk_pos: Vector2i, local_tile_x: int, local_tile_y: int, map_w
 func _stamp_extra_light_fast(visible: PackedFloat32Array, local_x: int, local_y: int, radius: float, intensity: float) -> void:
     var r_int := int(ceil(radius))
     var radius_sq := radius * radius
-    var inv_radius := 1.0 / radius if radius > 0.0 else 1.0
 
     var y_start := maxi(0, local_y - r_int)
     var y_end := mini(FOG_SIZE, local_y + r_int + 1)
     var x_start := maxi(0, local_x - r_int)
     var x_end := mini(FOG_SIZE, local_x + r_int + 1)
 
+    var lut_max := float(_EXTRA_LIGHT_LUT_SIZE - 1)
     for fy in range(y_start, y_end):
         var dy := fy - local_y
         var dy2 := dy * dy
         var fog_row := fy * FOG_SIZE
         for fx in range(x_start, x_end):
             var dx := fx - local_x
-            var d2 := dx * dx + dy2
+            var d2 := float(dx * dx + dy2)
             if d2 > radius_sq:
                 continue
-            var t := sqrt(float(d2)) * inv_radius
-            # smootherstep inline
-            t = clampf(t, 0.0, 1.0)
-            t = t * t * t * (t * (t * 6.0 - 15.0) + 10.0)
+            var u := d2 / radius_sq
+            var lut_idx := mini(int(u * lut_max), _EXTRA_LIGHT_LUT_SIZE - 1)
+            var t := _extra_light_falloff_lut[lut_idx]
             var val := lerpf(intensity, 0.0, t)
             var idx := fog_row + fx
             if val > visible[idx]:
@@ -212,8 +232,8 @@ func _stamp_extra_light_fast(visible: PackedFloat32Array, local_x: int, local_y:
 # -- Flood-fill: discover tiles enclosed by explored tiles (single pass, skip edges) --
 
 func _flood_fill_enclosed_fast(explored: PackedFloat32Array) -> void:
-    # Single pass is usually enough for 16x16; run 2 passes max for safety
-    for _pass in 2:
+    # Propagate explored inward; 8 passes covers full 16x16 chunk
+    for _pass in 8:
         var changed := false
         for y in range(1, FOG_SIZE - 1):
             var row := y * FOG_SIZE
@@ -264,66 +284,72 @@ func _flood_fill_enclosed_fast(explored: PackedFloat32Array) -> void:
 # -- Combined falloff + image composition (avoids extra array allocations) --
 
 func _apply_falloff_and_compose(img: Image, visible: PackedFloat32Array, explored: PackedFloat32Array) -> void:
-    # Work on the scratch buffer for falloff
-    var result := _falloff_scratch
+    # Ping-pong between scratch buffers to avoid duplicate() allocations
+    var src := _falloff_scratch
+    var dst := _falloff_scratch_2
 
-    # Copy explored into result
+    # Copy explored into src
     for i in FOG_PIXEL_COUNT:
-        result[i] = explored[i]
+        src[i] = explored[i]
 
-    # Blur passes to soften explored edges
-    # Use a simple separable-ish max-spread with weights
+    # Blur passes to soften explored edges (read src, write dst, then swap)
     for _pass_i in EXPLORED_FALLOFF_TILES:
-        var prev := result.duplicate()
         for y in FOG_SIZE:
             var row := y * FOG_SIZE
             for x in FOG_SIZE:
                 var idx := row + x
-                if prev[idx] >= EXPLORED_BRIGHTNESS:
+                if src[idx] >= EXPLORED_BRIGHTNESS:
+                    dst[idx] = src[idx]
                     continue
                 # Find max weighted neighbor
                 var max_n := 0.0
 
                 # Cardinal neighbors (weight 0.75)
                 if y > 0:
-                    var nv := prev[idx - FOG_SIZE] * 0.75
+                    var nv := src[idx - FOG_SIZE] * 0.75
                     if nv > max_n: max_n = nv
                 if y < FOG_SIZE - 1:
-                    var nv := prev[idx + FOG_SIZE] * 0.75
+                    var nv := src[idx + FOG_SIZE] * 0.75
                     if nv > max_n: max_n = nv
                 if x > 0:
-                    var nv := prev[idx - 1] * 0.75
+                    var nv := src[idx - 1] * 0.75
                     if nv > max_n: max_n = nv
                 if x < FOG_SIZE - 1:
-                    var nv := prev[idx + 1] * 0.75
+                    var nv := src[idx + 1] * 0.75
                     if nv > max_n: max_n = nv
 
                 # Diagonal neighbors (weight 0.6)
                 if y > 0 and x > 0:
-                    var nv := prev[idx - FOG_SIZE - 1] * 0.6
+                    var nv := src[idx - FOG_SIZE - 1] * 0.6
                     if nv > max_n: max_n = nv
                 if y > 0 and x < FOG_SIZE - 1:
-                    var nv := prev[idx - FOG_SIZE + 1] * 0.6
+                    var nv := src[idx - FOG_SIZE + 1] * 0.6
                     if nv > max_n: max_n = nv
                 if y < FOG_SIZE - 1 and x > 0:
-                    var nv := prev[idx + FOG_SIZE - 1] * 0.6
+                    var nv := src[idx + FOG_SIZE - 1] * 0.6
                     if nv > max_n: max_n = nv
                 if y < FOG_SIZE - 1 and x < FOG_SIZE - 1:
-                    var nv := prev[idx + FOG_SIZE + 1] * 0.6
+                    var nv := src[idx + FOG_SIZE + 1] * 0.6
                     if nv > max_n: max_n = nv
 
                 var threshold := EXPLORED_EDGE_BRIGHTNESS * 0.3
-                if max_n > result[idx] and max_n > threshold:
-                    result[idx] = minf(max_n, EXPLORED_BRIGHTNESS)
+                if max_n > src[idx] and max_n > threshold:
+                    dst[idx] = minf(max_n, EXPLORED_BRIGHTNESS)
+                else:
+                    dst[idx] = src[idx]
+        # Swap for next pass
+        var tmp := src
+        src = dst
+        dst = tmp
 
-    # Compose final RGBA bytes in one pass
+    # Compose final RGBA bytes in one pass (src has final falloff data after blur)
     var bytes := _compose_bytes
     var eb := EXPLORED_BRIGHTNESS
     var eb_threshold := eb * 0.9
     var inv_eb_threshold := 1.0 / eb_threshold if eb_threshold > 0.0 else 1.0
     for i in FOG_PIXEL_COUNT:
         var vis := visible[i]
-        var exp_val := result[i]
+        var exp_val := src[i]
 
         var brightness: float
         if vis > 0.0:

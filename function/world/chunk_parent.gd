@@ -384,6 +384,10 @@ func get_chunk(pos: Vector2i) -> Chunk:
 func get_chunk_if_exists(pos: Vector2i) -> Chunk:
     return _chunk_lookup.get(pos)
 
+## Fast lookup by coordinates; uses internal cache for repeated (cx,cy) access in hot loops.
+func get_chunk_at(cx: int, cy: int) -> Chunk:
+    return _get_chunk_cached(cx, cy)
+
 func get_chunks() -> Array:
     return _chunk_lookup.values()
 
