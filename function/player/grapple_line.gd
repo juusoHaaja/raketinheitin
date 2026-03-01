@@ -3,7 +3,7 @@ class_name GrappleLine
 
 var anchor: Vector2 = Vector2.ZERO
 var cut_offset: float = 50.0
-var max_length: float = 1000.0
+var max_length: float = 1800.0
 var hook_velocity: float = 3000.0
 
 enum LineState {
