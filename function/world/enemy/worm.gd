@@ -22,7 +22,7 @@ enum Move {
 @export var damage_cooldown: float = 1.2
 
 ## Charge attack: runs at player, breaks cells, extra damage
-@export var charge_probability: float = 0.35
+@export var charge_probability: float = 0.22
 @export var charge_speed: float = 2600.0
 @export var charge_duration_min: float = 0.5
 @export var charge_duration_max: float = 1.0
@@ -44,11 +44,11 @@ var player_target: Node2D = null
 @export var orbit_wobble_speed: float = 2.0
 @export var move_duration_min: float = 0.6
 @export var move_duration_max: float = 1.8
-@export var lunge_radius_ratio: float = 0.35  ## How close during lunge (more aggressive)
+@export var lunge_radius_ratio: float = 0.5  ## How close during lunge (more aggressive)
 @export var retreat_radius_ratio: float = 1.1
 @export var strafe_speed: float = 2.2  ## Faster strafing
 @export var close_range_threshold: float = 260.0  ## Prefer lunge when player within this distance
-@export var stationary_charge_bonus: float = 0.25  ## Extra charge chance when player barely moving
+@export var stationary_charge_bonus: float = 0.1  ## Extra charge chance when player barely moving
 
 var _orbit_angle: float = 0.0
 var _current_move: Move = Move.ORBIT
@@ -190,9 +190,9 @@ func _pick_next_move() -> void:
         charge_roll += stationary_charge_bonus
     var candidates: Array[Move]
     if dist_to_player > 0.0 and dist_to_player < close_range_threshold:
-        candidates = [Move.LUNGE, Move.LUNGE, Move.LUNGE, Move.STRAFE, Move.ORBIT, Move.STRAFE]
+        candidates = [Move.LUNGE, Move.LUNGE, Move.ORBIT, Move.ORBIT, Move.STRAFE, Move.STRAFE]
     else:
-        candidates = [Move.ORBIT, Move.LUNGE, Move.LUNGE, Move.STRAFE, Move.STRAFE]
+        candidates = [Move.ORBIT, Move.ORBIT, Move.LUNGE, Move.STRAFE, Move.STRAFE]
     if randf() < charge_roll and is_instance_valid(player_target):
         _current_move = Move.CHARGE
         _charge_direction = (player_target.global_position - head.global_position).normalized()
