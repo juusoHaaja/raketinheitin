@@ -1,7 +1,8 @@
 extends Node2D
 class_name WormHealthBar
 
-## Draws a health bar for a worm. Parent must be a Worm; its Health is synced to combined segment health.
+## Draws a health bar. Parent can be a Worm (shows combined segment health) or WormSegment (shows segment HP).
+## When only one segment remains, segment bars are hidden and the worm's main bar shows the remaining health.
 
 @export var bar_width: float = 80.0
 @export var bar_height: float = 8.0

@@ -26,6 +26,7 @@ var circle_tool: CircleTool
 @onready var next_worm_label: Label = $UI/NextWormLabel
 @onready var game_over_score_label: Label = $UI/GameOverLayer/VBox/ScoreLabel
 @onready var game_over_highscore_label: Label = $UI/GameOverLayer/VBox/HighscoreLabel
+@onready var pause_menu: Control = $PauseMenu/PauseLayer
 
 var _worms: Array[Node2D] = []
 var _worm: Node2D = null  ## Primary/first worm for health bar display
@@ -82,6 +83,7 @@ func _ready():
 
     _spawn_worm()
 
+
 func _process(delta: float) -> void:
     if _fire_cooldown_timer > 0.0:
         _fire_cooldown_timer -= delta
@@ -89,6 +91,10 @@ func _process(delta: float) -> void:
     _update_progressive_spawn(delta)
     _update_worm_segment_bars()
     _update_worm_ui_labels()
+    # Pause menu on ESC (Input.is_action_just_pressed works regardless of input propagation)
+    if Input.is_action_just_pressed("ui_cancel"):
+        if not game_over_layer.visible and not get_tree().paused and pause_menu and pause_menu.has_method("show_pause_menu"):
+            pause_menu.show_pause_menu()
     # Show grappling hook reminder after 10s if player hasn't used right click
     if not _grappling_hook_used and not _grappling_reminder_shown and grappling_reminder_label:
         _grappling_reminder_timer += delta

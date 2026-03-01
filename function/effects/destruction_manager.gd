@@ -65,6 +65,29 @@ func shake_camera(duration: float, intensity: float) -> void:
         _shake_timer = 0.0
     _shake_intensity = maxf(_shake_intensity, intensity)
 
+## Spawns a burst of organic-colored particles (e.g. worm segment death).
+func spawn_organic_burst(global_pos: Vector2) -> void:
+    var particle_count := randi_range(5, 9)
+    var radius := 25.0
+
+    var organic_colors: Array[Color] = [
+        Color(0.35, 0.55, 0.3, 0.6),
+        Color(0.45, 0.5, 0.35, 0.6),
+        Color(0.5, 0.4, 0.3, 0.6),
+        Color(0.25, 0.45, 0.2, 0.6),
+    ]
+
+    for i in particle_count:
+        var dust := DustParticle.new()
+        var offset := Vector2.from_angle(randf() * TAU) * randf() * radius
+        dust.global_position = global_pos + offset
+        var angle := offset.angle() if offset.length() > 0 else randf() * TAU
+        dust.velocity = Vector2.from_angle(angle) * randf_range(15, 45) + Vector2(0, randf_range(-25, -10))
+        dust.size = snappedf(randf_range(2, 5), 1.0)
+        dust.lifetime = randf_range(0.35, 0.6)
+        dust.color = organic_colors.pick_random()
+        add_child(dust)
+
 # ============================================
 # SCREEN SHAKE
 # ============================================
