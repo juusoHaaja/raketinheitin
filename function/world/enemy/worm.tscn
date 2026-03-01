@@ -1,17 +1,17 @@
 [gd_scene format=3 uid="uid://b54rwxstskxou"]
 
 [ext_resource type="Script" uid="uid://bbmbqfb7ap7l1" path="res://function/world/enemy/worm.gd" id="1_30phe"]
-[ext_resource type="PackedScene" path="res://function/components/health.tscn" id="2_health"]
+[ext_resource type="PackedScene" uid="uid://dpleghfa4rpto" path="res://function/components/health.tscn" id="2_health"]
 [ext_resource type="Script" uid="uid://bucbiwcrnh6sj" path="res://function/world/enemy/worm_head.gd" id="3_1amy0"]
 [ext_resource type="AudioStream" uid="uid://d3eac178u3yxn" path="res://audio/sfx/explosions/explosion(1).wav" id="6_hitsfx"]
 [ext_resource type="PackedScene" path="res://function/world/enemy/worm_segment.tscn" id="7_segment"]
 [ext_resource type="Texture2D" uid="uid://bhxyhpnnahnl8" path="res://art/worm/head.png" id="8_head"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_head"]
-radius = 28.0
+radius = 58.00862
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_damage"]
-radius = 36.0
+radius = 75.00667
 
 [node name="Worm" type="Node2D" unique_id=627508341]
 script = ExtResource("1_30phe")
