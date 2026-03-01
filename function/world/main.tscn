@@ -6,8 +6,6 @@
 [ext_resource type="PackedScene" uid="uid://cdagrd1fdco81" path="res://function/player/player.tscn" id="3_6qdvf"]
 [ext_resource type="PackedScene" uid="uid://d2k2ir7yhnfr2" path="res://function/player/grapple_line.tscn" id="3_oq4x4"]
 [ext_resource type="Texture2D" uid="uid://c63ixy25uvlr7" path="res://art/background/bg.png" id="4_gs4ui"]
-[ext_resource type="PackedScene" uid="uid://bodvfx5et6e3x" path="res://function/world/resources/gem.tscn" id="5_sg8pp"]
-[ext_resource type="PackedScene" uid="uid://bjbwuadrrmb67" path="res://function/world/resources/shop.tscn" id="6_eagr0"]
 [ext_resource type="PackedScene" uid="uid://brj65ojy3hlht" path="res://function/world/lighting/fog_of_war.tscn" id="7_fog"]
 [ext_resource type="PackedScene" uid="uid://b54rwxstskxou" path="res://function/world/enemy/worm.tscn" id="8_worm"]
 
@@ -36,11 +34,6 @@ stretch_mode = 1
 
 [node name="Player" parent="." unique_id=58689154 instance=ExtResource("3_6qdvf")]
 position = Vector2(586, 296)
-
-[node name="Gem" parent="." unique_id=4840960 instance=ExtResource("5_sg8pp")]
-position = Vector2(348, 24)
-
-[node name="Shop" parent="." unique_id=1921542416 instance=ExtResource("6_eagr0")]
 
 [node name="FogOfWar" parent="." unique_id=2130879496 instance=ExtResource("7_fog")]
 z_index = 10
