@@ -8,6 +8,7 @@ script = ExtResource("1_preview")
 
 [node name="ChunkParent" parent="." instance=ExtResource("2_chunks")]
 optional_initial_center = Vector2(400, 300)
+use_gpu_generation = false
 
 [node name="Camera2D" type="Camera2D" parent="."]
 position = Vector2(400, 300)

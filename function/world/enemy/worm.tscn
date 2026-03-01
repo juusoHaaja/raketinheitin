@@ -1,12 +1,10 @@
 [gd_scene format=3 uid="uid://b54rwxstskxou"]
 
 [ext_resource type="Script" uid="uid://bbmbqfb7ap7l1" path="res://function/world/enemy/worm.gd" id="1_30phe"]
-[ext_resource type="PackedScene" uid="uid://c3healthcomp01" path="res://function/components/health.tscn" id="2_health"]
+[ext_resource type="PackedScene" path="res://function/components/health.tscn" id="2_health"]
 [ext_resource type="Script" uid="uid://bucbiwcrnh6sj" path="res://function/world/enemy/worm_head.gd" id="3_1amy0"]
-[ext_resource type="Texture2D" uid="uid://6ii76g611t6d" path="res://icon.svg" id="4_wc15c"]
-[ext_resource type="Script" path="res://function/components/health_bar.gd" id="5_healthbar"]
 [ext_resource type="AudioStream" uid="uid://d3eac178u3yxn" path="res://audio/sfx/explosions/explosion(1).wav" id="6_hitsfx"]
-[ext_resource type="PackedScene" uid="uid://worm_segment_001" path="res://function/world/enemy/worm_segment.tscn" id="7_segment"]
+[ext_resource type="PackedScene" path="res://function/world/enemy/worm_segment.tscn" id="7_segment"]
 [ext_resource type="Texture2D" uid="uid://bhxyhpnnahnl8" path="res://art/worm/head.png" id="8_head"]
 
 [sub_resource type="CircleShape2D" id="CircleShape2D_head"]
@@ -18,34 +16,30 @@ radius = 36.0
 [node name="Worm" type="Node2D" unique_id=627508341]
 script = ExtResource("1_30phe")
 
-[node name="HealthBar" type="Node2D" parent="." script=ExtResource("5_healthbar")]
-z_index = 5
-bar_width = 60.0
-bar_height = 6.0
+[node name="HealthBar" type="Node2D" parent="." unique_id=1517181449]
 
-[node name="HitSfx" type="AudioStreamPlayer" parent="." unique_id="worm_hitsfx"]
-volume_db = -12.0
+[node name="HitSfx" type="AudioStreamPlayer" parent="." unique_id=939097976]
 stream = ExtResource("6_hitsfx")
+volume_db = -12.0
 
-[node name="Health" parent="." instance=ExtResource("2_health")]
+[node name="Health" parent="." unique_id=111826933 instance=ExtResource("2_health")]
 max_health = 150.0
 
 [node name="Head" type="StaticBody2D" parent="." unique_id=1754404088]
+position = Vector2(0, 1)
 collision_layer = 8
 collision_mask = 0
-position = Vector2(0, 1)
 script = ExtResource("3_1amy0")
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Head" unique_id="Head_collision"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Head" unique_id=149616131]
 shape = SubResource("CircleShape2D_head")
 
-[node name="DamageZone" type="Area2D" parent="Head" unique_id="DamageZone_uid"]
+[node name="DamageZone" type="Area2D" parent="Head" unique_id=1182985892]
 collision_layer = 0
 collision_mask = 2
 monitorable = false
-monitoring = true
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Head/DamageZone"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Head/DamageZone" unique_id=283096137]
 shape = SubResource("CircleShape2D_damage")
 
 [node name="Sprite2D" type="Sprite2D" parent="Head" unique_id=2097096134]
@@ -55,15 +49,27 @@ texture = ExtResource("8_head")
 [node name="Segments" type="Node2D" parent="." unique_id=1634343858]
 position = Vector2(0, 1)
 
-[node name="Segment0" parent="Segments" instance=ExtResource("7_segment")]
+[node name="Segment0" parent="Segments" unique_id=1748536091 instance=ExtResource("7_segment")]
 
-[node name="Segment1" parent="Segments" instance=ExtResource("7_segment")]
+[node name="Segment1" parent="Segments" unique_id=1351189885 instance=ExtResource("7_segment")]
 
-[node name="Segment2" parent="Segments" instance=ExtResource("7_segment")]
+[node name="Segment2" parent="Segments" unique_id=1207819415 instance=ExtResource("7_segment")]
 
-[node name="Segment3" parent="Segments" instance=ExtResource("7_segment")]
+[node name="Segment3" parent="Segments" unique_id=1002551016 instance=ExtResource("7_segment")]
 
-[node name="Segment4" parent="Segments" instance=ExtResource("7_segment")]
+[node name="Segment4" parent="Segments" unique_id=981294549 instance=ExtResource("7_segment")]
+
+[node name="Segment5" parent="Segments" unique_id=1341029593 instance=ExtResource("7_segment")]
+
+[node name="Segment6" parent="Segments" unique_id=1455467050 instance=ExtResource("7_segment")]
+
+[node name="Segment7" parent="Segments" unique_id=1076788417 instance=ExtResource("7_segment")]
+
+[node name="Segment8" parent="Segments" unique_id=507673562 instance=ExtResource("7_segment")]
+
+[node name="Segment9" parent="Segments" unique_id=816680107 instance=ExtResource("7_segment")]
+
+[node name="Segment10" parent="Segments" unique_id=2097721483 instance=ExtResource("7_segment")]
 
 [node name="TargetNode" type="Node2D" parent="." unique_id=987264291]
 
