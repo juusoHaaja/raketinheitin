@@ -39,6 +39,9 @@ var _cursor_light_pos: Vector2 = _CURSOR_LIGHT_INVALID
 const CURSOR_LIGHT_RADIUS_TILES: float = 24.0
 const CURSOR_LIGHT_INTENSITY: float = 0.9
 
+# Cache: avoid re-assigning textures when nothing changed
+var _textures_dirty: bool = true
+
 func _ready() -> void:
     _fog_system = FogTextureSystemScript.new()
 
@@ -84,25 +87,33 @@ func _process(delta: float) -> void:
     # Decay explosion flashes
     var i := _explosion_flashes.size() - 1
     while i >= 0:
-        _explosion_flashes[i]["time_left"] -= delta
-        _explosion_flashes[i]["intensity"] *= (1.0 - delta * EXPLOSION_LIGHT_DECAY)
-        if _explosion_flashes[i]["time_left"] <= 0.0 or _explosion_flashes[i]["intensity"] < 0.01:
+        var flash := _explosion_flashes[i]
+        flash["time_left"] -= delta
+        flash["intensity"] *= (1.0 - delta * EXPLOSION_LIGHT_DECAY)
+        if flash["time_left"] <= 0.0 or flash["intensity"] < 0.01:
             _explosion_flashes.remove_at(i)
+            _textures_dirty = true
         i -= 1
 
     # Clean up dead projectile references
+    var old_count := _tracked_projectiles.size()
     _tracked_projectiles = _tracked_projectiles.filter(func(p): return is_instance_valid(p))
+    if _tracked_projectiles.size() != old_count:
+        _textures_dirty = true
 
     _update_timer -= delta
     if _update_timer > 0.0:
-        _assign_textures_to_overlays()
+        if _textures_dirty:
+            _assign_textures_to_overlays()
         return
 
     if not fog_enabled:
-        _assign_textures_to_overlays()
+        if _textures_dirty:
+            _assign_textures_to_overlays()
         return
 
     _update_timer = _UPDATE_INTERVAL
+    _textures_dirty = true
 
     if _gpu_available:
         _update_fog_gpu()
@@ -149,21 +160,21 @@ func _update_fog_gpu() -> void:
             "intensity": flash["intensity"]
         })
 
-    # Chunks that need visibility update (player + cursor + extra lights)
+    if lights.is_empty():
+        return
+
+    # Compute bounding box of chunks needing update
     var min_cx: int = 0x7FFFFFFF
     var max_cx: int = -0x7FFFFFFF
     var min_cy: int = 0x7FFFFFFF
     var max_cy: int = -0x7FFFFFFF
-    if lights.is_empty():
-        pass
-    else:
-        for light in lights:
-            var lc: Vector2i = _chunk_parent.get_chunk_pos(light["tile_pos"])
-            var lr: int = int(ceil(light["radius"] / float(w))) + 1
-            min_cx = mini(min_cx, lc.x - lr)
-            max_cx = maxi(max_cx, lc.x + lr)
-            min_cy = mini(min_cy, lc.y - lr)
-            max_cy = maxi(max_cy, lc.y + lr)
+    for light in lights:
+        var lc: Vector2i = _chunk_parent.get_chunk_pos(light["tile_pos"])
+        var lr: int = int(ceil(light["radius"] / float(w))) + 1
+        min_cx = mini(min_cx, lc.x - lr)
+        max_cx = maxi(max_cx, lc.x + lr)
+        min_cy = mini(min_cy, lc.y - lr)
+        max_cy = maxi(max_cy, lc.y + lr)
 
     var chunks_to_update: Array[Vector2i] = []
     for cx in range(min_cx, max_cx + 1):
@@ -235,6 +246,7 @@ func _update_fog_cpu() -> void:
             _fog_system.get_or_create_fog(cpos, ch.map_width, ch.map_height)
 
 func _assign_textures_to_overlays() -> void:
+    _textures_dirty = false
     if not _chunk_parent:
         return
     if not fog_enabled:
@@ -250,13 +262,11 @@ func _assign_gpu_textures() -> void:
         if not is_instance_valid(ch):
             continue
         _gpu_fog_system.get_or_create_chunk(ch.chunk_pos)
-    for ch in _chunk_parent.get_chunks():
-        if not is_instance_valid(ch):
-            continue
         ch.create_fog_overlay_if_needed()
         var tex: ImageTexture = _gpu_fog_system.get_texture(ch.chunk_pos)
         if tex:
-            ch.fog_overlay.texture = tex
+            if ch.fog_overlay.texture != tex:
+                ch.fog_overlay.texture = tex
             ch.fog_overlay.visible = true
         else:
             ch.fog_overlay.visible = false
@@ -266,13 +276,11 @@ func _assign_cpu_textures() -> void:
         if not is_instance_valid(ch):
             continue
         _fog_system.get_or_create_fog(ch.chunk_pos, ch.map_width, ch.map_height)
-    for ch in _chunk_parent.get_chunks():
-        if not is_instance_valid(ch):
-            continue
         ch.create_fog_overlay_if_needed()
         var tex: ImageTexture = _fog_system.get_texture(ch.chunk_pos) as ImageTexture
         if tex:
-            ch.fog_overlay.texture = tex
+            if ch.fog_overlay.texture != tex:
+                ch.fog_overlay.texture = tex
             ch.fog_overlay.visible = true
         else:
             ch.fog_overlay.visible = false
@@ -288,10 +296,12 @@ func _hide_all_fog_overlays() -> void:
 func track_projectile(projectile: Node2D) -> void:
     if not _tracked_projectiles.has(projectile):
         _tracked_projectiles.append(projectile)
+        _textures_dirty = true
 
 ## Call this to unregister a projectile
 func untrack_projectile(projectile: Node2D) -> void:
     _tracked_projectiles.erase(projectile)
+    _textures_dirty = true
 
 ## Call this when an explosion happens to create a temporary flash
 func add_explosion_flash(world_pos: Vector2, radius: float = -1.0, duration: float = 0.5) -> void:
@@ -303,11 +313,14 @@ func add_explosion_flash(world_pos: Vector2, radius: float = -1.0, duration: flo
         "intensity": EXPLOSION_LIGHT_INTENSITY,
         "time_left": duration,
     })
+    _textures_dirty = true
 
 ## Set cursor world position for flashlight effect (e.g. in menu). Call each frame when over the view.
 func set_cursor_light_position(world_pos: Vector2) -> void:
     _cursor_light_pos = world_pos
+    _textures_dirty = true
 
 ## Disable cursor flashlight (e.g. when cursor leaves the preview area).
 func clear_cursor_light() -> void:
     _cursor_light_pos = _CURSOR_LIGHT_INVALID
+    _textures_dirty = true

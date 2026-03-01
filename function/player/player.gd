@@ -21,7 +21,7 @@ var grappling_line_force: float = 100000.0
 var max_grappling_hooks: int = 5
 
 ## Passive health regeneration per second (only when below max)
-@export var health_regen_per_second: float = 3.0
+@export var health_regen_per_second: float = 0.25
 
 var _waiting_for_chunks := true
 
